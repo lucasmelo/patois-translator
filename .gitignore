@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+*.env.local
+
+# Build outputs
+dist/
+build/
+.angular/
+
+# Audio temporários (NUNCA commitar)
+backend/temp/*.mp3
+backend/temp/*.ogg
+backend/temp/*.webm
+backend/temp/*.m4a
+!backend/temp/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

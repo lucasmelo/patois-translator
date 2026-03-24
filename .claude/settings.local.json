@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm install:*)",
+      "WebFetch(domain:groupdocs.site)",
+      "WebFetch(domain:emanasound.com)",
+      "WebFetch(domain:jamaicanpatwah.com)",
+      "WebFetch(domain:niceup.com)",
+      "WebFetch(domain:www.drorlist.com)"
+    ]
+  }
+}
