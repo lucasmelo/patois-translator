@@ -1,0 +1,25 @@
+<div class="app-wrapper">
+  <header class="app-header">
+    <div class="app-header__stripe app-header__stripe--green"></div>
+    <div class="app-header__stripe app-header__stripe--yellow"></div>
+    <div class="app-header__stripe app-header__stripe--black"></div>
+  </header>
+
+  <main class="app-main">
+    <app-translator (translated)="onResult($event)" />
+
+    @if (result()) {
+      <section id="resultado" class="result-section">
+        <div class="result-section__divider">
+          <span>✦ Resultado ✦</span>
+        </div>
+        <app-lyrics-display [result]="result()!" />
+      </section>
+    }
+  </main>
+
+  <footer class="app-footer">
+    <p>Powered by <strong>Groq Whisper</strong> + <strong>Gemini 1.5 Flash</strong></p>
+    <p class="app-footer__sub">One Love 🌿 | Patois Translator</p>
+  </footer>
+</div>

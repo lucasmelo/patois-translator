@@ -1,0 +1,51 @@
+<section class="hero">
+  <div class="hero__badge">🎵 Reggae & Dancehall</div>
+  <h1 class="hero__title">
+    Patois <span class="hero__title--accent">Translator</span>
+  </h1>
+  <p class="hero__subtitle">
+    Transcrição e tradução cultural de músicas jamaicanas para o Português do Brasil
+  </p>
+</section>
+
+<div class="search-box">
+  <div class="search-box__inner">
+    <input
+      class="search-box__input"
+      type="url"
+      placeholder="Cole aqui o link do YouTube (máx. 7 minutos)..."
+      [ngModel]="url()"
+      (ngModelChange)="url.set($event)"
+      (keyup.enter)="translate()"
+      [disabled]="loading()"
+      aria-label="URL do YouTube"
+    />
+    <button
+      class="search-box__btn"
+      (click)="translate()"
+      [disabled]="loading()"
+      [class.search-box__btn--loading]="loading()"
+    >
+      @if (loading()) {
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Processando...</span>
+      } @else {
+        <span>Traduzir</span>
+      }
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="status-bar" role="status" aria-live="polite">
+      <span class="status-bar__dot"></span>
+      Baixando áudio, transcrevendo e traduzindo com IA... isso pode levar ~30 segundos.
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-alert" role="alert">
+      <span class="error-alert__icon">⚠️</span>
+      <span>{{ error() }}</span>
+    </div>
+  }
+</div>

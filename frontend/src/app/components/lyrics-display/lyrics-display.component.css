@@ -1,0 +1,210 @@
+/* Context Card */
+.context-card {
+  max-width: 860px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
+}
+
+.context-card > div,
+.context-card > p {
+  background: var(--surface);
+  border-left: 4px solid var(--jamaica-green);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.context-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface) !important;
+  border-left: 4px solid var(--jamaica-green);
+  border-radius: 0 var(--radius) 0 0;
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+.context-card__icon {
+  font-size: 1.25rem;
+}
+
+.context-card__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--jamaica-yellow);
+}
+
+.context-card__body {
+  background: var(--surface);
+  border-left: 4px solid var(--jamaica-green);
+  border-radius: 0 0 var(--radius) 0;
+  padding: 0.75rem 1.25rem 1.25rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+/* Lyrics Grid */
+.lyrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+  padding: 0 1rem;
+}
+
+.lyrics-divider {
+  background: var(--surface-3);
+  margin: 0 1rem;
+}
+
+.lyrics-column {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.lyrics-column--original {
+  border-right: none;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.lyrics-column--translated {
+  border-left: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.lyrics-column__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-3);
+  background: var(--surface-2);
+}
+
+.lyrics-column__flag {
+  font-size: 1.1rem;
+}
+
+.lyrics-column__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.lyrics-column__text {
+  font-family: var(--font-lyrics);
+  font-size: 0.875rem;
+  line-height: 1.9;
+  color: var(--text-primary);
+  padding: 1.25rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* Notas Culturais */
+.notas-section {
+  max-width: 860px;
+  margin: 0 auto 3rem;
+  padding: 0 1rem;
+}
+
+.notas-section__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  color: var(--text-primary);
+}
+
+.notas-section__subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.notas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.nota-card {
+  background: var(--surface);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
+}
+
+.nota-card:hover {
+  border-color: var(--jamaica-yellow);
+  background: var(--surface-2);
+}
+
+.nota-card--expanded {
+  border-color: var(--jamaica-yellow);
+  background: var(--surface-2);
+}
+
+.nota-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nota-card__termo {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--jamaica-yellow);
+  font-family: var(--font-lyrics);
+}
+
+.nota-card__chevron {
+  font-size: 1.4rem;
+  color: var(--text-secondary);
+  line-height: 1;
+  transform: rotate(90deg);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.nota-card__chevron--open {
+  transform: rotate(270deg);
+}
+
+.nota-card__explicacao {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--surface-3);
+  padding-top: 0.75rem;
+}
+
+/* Responsivo — Mobile */
+@media (max-width: 768px) {
+  .lyrics-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .lyrics-divider {
+    display: none;
+  }
+
+  .lyrics-column--original,
+  .lyrics-column--translated {
+    border-radius: var(--radius);
+  }
+}

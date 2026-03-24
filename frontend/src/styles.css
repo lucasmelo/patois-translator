@@ -1,0 +1,53 @@
+/* =========================================================
+   ESTILOS GLOBAIS — Patois Translator
+   Tema: Jamaica (verde #006847, amarelo #FED100, preto #1a1a1a)
+   ========================================================= */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --jamaica-green:  #006847;
+  --jamaica-yellow: #FED100;
+  --jamaica-black:  #1a1a1a;
+  --surface:        #242424;
+  --surface-2:      #2e2e2e;
+  --surface-3:      #383838;
+  --text-primary:   #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --accent:         #FED100;
+  --danger:         #ff4d4d;
+  --radius:         12px;
+  --font-ui:        'Montserrat', sans-serif;
+  --font-lyrics:    'Roboto Mono', monospace;
+  --shadow:         0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-ui);
+  background-color: var(--jamaica-black);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar customizada */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+/* Utilitários */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

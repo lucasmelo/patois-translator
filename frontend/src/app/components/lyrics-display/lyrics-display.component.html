@@ -1,0 +1,64 @@
+<!-- Análise de Contexto -->
+<div class="context-card">
+  <div class="context-card__header">
+    <span class="context-card__icon">🧠</span>
+    <h2 class="context-card__title">Análise de Contexto</h2>
+  </div>
+  <p class="context-card__body">{{ result().analise_de_contexto }}</p>
+</div>
+
+<!-- Letras lado a lado -->
+<div class="lyrics-grid">
+  <div class="lyrics-column lyrics-column--original">
+    <div class="lyrics-column__header">
+      <span class="lyrics-column__flag">🇯🇲</span>
+      <h3 class="lyrics-column__title">Patois Original</h3>
+    </div>
+    <pre class="lyrics-column__text">{{ result().letra_original }}</pre>
+  </div>
+
+  <div class="lyrics-divider" aria-hidden="true"></div>
+
+  <div class="lyrics-column lyrics-column--translated">
+    <div class="lyrics-column__header">
+      <span class="lyrics-column__flag">🇧🇷</span>
+      <h3 class="lyrics-column__title">Português do Brasil</h3>
+    </div>
+    <pre class="lyrics-column__text">{{ result().letra_traduzida }}</pre>
+  </div>
+</div>
+
+<!-- Notas Culturais -->
+@if (hasNotas()) {
+  <div class="notas-section">
+    <h2 class="notas-section__title">
+      <span>📚</span> Notas Culturais
+    </h2>
+    <p class="notas-section__subtitle">Clique em um termo para expandir a explicação</p>
+
+    <div class="notas-grid">
+      @for (nota of result().notas_culturais; track trackByTermo($index, nota)) {
+        <div
+          class="nota-card"
+          [class.nota-card--expanded]="isExpanded(nota.termo)"
+          (click)="toggleNota(nota.termo)"
+          role="button"
+          [attr.aria-expanded]="isExpanded(nota.termo)"
+          tabindex="0"
+          (keyup.enter)="toggleNota(nota.termo)"
+          (keyup.space)="toggleNota(nota.termo)"
+        >
+          <div class="nota-card__header">
+            <span class="nota-card__termo">{{ nota.termo }}</span>
+            <span class="nota-card__chevron" [class.nota-card__chevron--open]="isExpanded(nota.termo)">
+              ›
+            </span>
+          </div>
+          @if (isExpanded(nota.termo)) {
+            <p class="nota-card__explicacao">{{ nota.explicacao }}</p>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
