@@ -12,25 +12,34 @@ console.log(`[yt-dlp] usando binário: ${YT_DLP_BIN}`);
 
 const TEMP_DIR = path.join(__dirname, '../../temp');
 
+// Cookies do YouTube — necessário em IPs de datacenter (Render, AWS, etc.)
+// No Render: Environment → YOUTUBE_COOKIES = conteúdo do arquivo cookies.txt (formato Netscape)
+let COOKIES_FILE = null;
+if (process.env.YOUTUBE_COOKIES) {
+  if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
+  COOKIES_FILE = path.join(TEMP_DIR, 'yt_cookies.txt');
+  fs.writeFileSync(COOKIES_FILE, process.env.YOUTUBE_COOKIES, 'utf8');
+  console.log('[yt-dlp] cookies carregados via YOUTUBE_COOKIES');
+} else {
+  console.warn('[yt-dlp] YOUTUBE_COOKIES não definida — pode falhar em IPs de datacenter');
+}
+
 // Normaliza qualquer variante de URL do YouTube para watch?v=ID limpo,
 // eliminando &list=, &index=, &start_radio= e outros parâmetros extras.
 function normalizeYoutubeUrl(raw) {
   try {
     const url = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
 
-    // youtu.be/VIDEO_ID
     if (url.hostname === 'youtu.be') {
       const videoId = url.pathname.slice(1).split('?')[0];
       return `https://www.youtube.com/watch?v=${videoId}`;
     }
 
-    // youtube.com/shorts/VIDEO_ID
     if (url.pathname.includes('/shorts/')) {
       const videoId = url.pathname.split('/shorts/')[1].split('/')[0];
       return `https://www.youtube.com/watch?v=${videoId}`;
     }
 
-    // youtube.com/watch?v=VIDEO_ID  (descarta &list= e qualquer outro param)
     const videoId = url.searchParams.get('v');
     if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
 
@@ -39,19 +48,23 @@ function normalizeYoutubeUrl(raw) {
   return raw;
 }
 
+function ytDlpOptions(extra = {}) {
+  return {
+    noWarnings: true,
+    noCheckCertificates: true,
+    noPlaylist: true,
+    ...(COOKIES_FILE ? { cookies: COOKIES_FILE } : {}),
+    ...extra,
+  };
+}
+
 async function getMetadata(url) {
   url = normalizeYoutubeUrl(url);
   try {
-    const info = await ytDlp(url, {
+    const info = await ytDlp(url, ytDlpOptions({
       dumpSingleJson: true,
-      noWarnings: true,
-      noCheckCertificates: true,
       preferFreeFormats: true,
-      noPlaylist: true,
-      // Usa o client iOS do YouTube — bypassa o challenge "confirm you're not a bot"
-      // que o YouTube impõe em IPs de datacenter para o client web padrão
-      extractorArgs: 'youtube:player_client=ios',
-    });
+    }));
 
     return {
       title: info.title || 'Música sem título',
@@ -65,20 +78,15 @@ async function getMetadata(url) {
 
 async function downloadAudio(url) {
   url = normalizeYoutubeUrl(url);
-  const fileName = `${uuidv4()}.mp3`;
-  const filePath = path.join(TEMP_DIR, fileName);
+  const filePath = path.join(TEMP_DIR, `${uuidv4()}.mp3`);
 
   try {
-    await ytDlp(url, {
+    await ytDlp(url, ytDlpOptions({
       extractAudio: true,
       audioFormat: 'mp3',
       audioQuality: '64K',
       output: filePath,
-      noWarnings: true,
-      noCheckCertificates: true,
-      noPlaylist: true,
-      extractorArgs: 'youtube:player_client=ios',
-    });
+    }));
   } catch (err) {
     console.error('[yt-dlp] Falha no download do áudio:', err.message);
     throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp e ffmpeg estão instalados no PATH.');
