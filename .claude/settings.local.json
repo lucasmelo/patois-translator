@@ -7,7 +7,10 @@
       "WebFetch(domain:emanasound.com)",
       "WebFetch(domain:jamaicanpatwah.com)",
       "WebFetch(domain:niceup.com)",
-      "WebFetch(domain:www.drorlist.com)"
+      "WebFetch(domain:www.drorlist.com)",
+      "Bash(gh repo:*)",
+      "Bash(git config:*)",
+      "Bash(git credential-manager:*)"
     ]
   }
 }
