@@ -4,7 +4,9 @@ const audioService = require('../services/audioService');
 const transcriptionService = require('../services/transcriptionService');
 const translationService = require('../services/translationService');
 
-const YOUTUBE_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/)[\w-]{11}/;
+// Aceita: youtube.com, www.youtube.com, m.youtube.com, youtu.be
+// Aceita parâmetros extras como &list=, &index=, ?t= (extrai só o watch?v=)
+const YOUTUBE_REGEX = /^(https?:\/\/)?((www\.|m\.)?youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/)[\w-]{11}/;
 const MAX_DURATION_SECONDS = 420; // 7 minutos
 
 router.post('/translate', async (req, res) => {

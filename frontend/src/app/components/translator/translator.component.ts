@@ -45,7 +45,7 @@ export class TranslatorComponent {
         const serverMessage: string = err.error?.error ?? '';
 
         if (err.status === 0) {
-          this.error.set('Não foi possível conectar ao servidor. Verifique se o backend está rodando na porta 3000.');
+          this.error.set('Não foi possível conectar ao servidor. Tente novamente em alguns instantes.');
         } else if (err.status === 400) {
           this.error.set(serverMessage || 'Requisição inválida.');
         } else {
@@ -57,6 +57,7 @@ export class TranslatorComponent {
   }
 
   private isYoutubeUrl(url: string): boolean {
-    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url);
+    // Aceita: youtube.com, www.youtube.com, m.youtube.com (mobile), youtu.be
+    return /^(https?:\/\/)?((www\.|m\.)?youtube\.com|youtu\.be)\/.+/.test(url);
   }
 }
