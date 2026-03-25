@@ -7,7 +7,6 @@ const translationService = require('../services/translationService');
 // Aceita: youtube.com, www.youtube.com, m.youtube.com, youtu.be
 // Aceita parâmetros extras como &list=, &index=, ?t= (extrai só o watch?v=)
 const YOUTUBE_REGEX = /^(https?:\/\/)?((www\.|m\.)?youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/)[\w-]{11}/;
-const MAX_DURATION_SECONDS = 420; // 7 minutos
 
 router.post('/translate', async (req, res) => {
   const { url } = req.body;
@@ -18,35 +17,25 @@ router.post('/translate', async (req, res) => {
   }
 
   try {
-    // 1. Busca metadados do vídeo
+    // 1. Busca título via oEmbed (duração é verificada pelo --match-filter no download)
     console.log(`[1/5] Buscando metadados: ${url}`);
-    const { title, duration } = await audioService.getMetadata(url);
-    console.log(`[1/5] Metadados OK → título: "${title}" | duração: ${duration}s`);
+    const { title } = await audioService.getMetadata(url);
+    console.log(`[1/5] Título: "${title}"`);
 
-    // 2. Valida duração
-    if (duration > MAX_DURATION_SECONDS) {
-      const minutos = Math.floor(duration / 60);
-      const segundos = duration % 60;
-      console.log(`[2/5] Duração excedida: ${minutos}m${segundos}s`);
-      return res.status(400).json({
-        error: `Vídeo muito longo (${minutos}m${segundos}s). O limite é 7 minutos.`
-      });
-    }
-
-    // 3. Download do áudio
-    console.log(`[3/5] Iniciando download do áudio (64kbps)...`);
+    // 2. Download do áudio (rejeita automaticamente vídeos > 7 min via --match-filter)
+    console.log(`[2/5] Iniciando download do áudio (64kbps)...`);
     filePath = await audioService.downloadAudio(url);
-    console.log(`[3/5] Download OK → arquivo: ${filePath}`);
+    console.log(`[2/5] Download OK → arquivo: ${filePath}`);
 
-    // 4. Transcrição via Groq Whisper
-    console.log(`[4/5] Enviando áudio para Groq Whisper-large-v3...`);
+    // 3. Transcrição via Groq Whisper
+    console.log(`[3/4] Enviando áudio para Groq Whisper-large-v3...`);
     const originalText = await transcriptionService.transcribe(filePath);
-    console.log(`[4/5] Transcrição OK → ${originalText.length} caracteres`);
+    console.log(`[3/4] Transcrição OK → ${originalText.length} caracteres`);
 
-    // 5. Tradução via Gemini
-    console.log(`[5/5] Iniciando tradução cultural via Gemini...`);
+    // 4. Tradução
+    console.log(`[4/4] Iniciando tradução cultural...`);
     const translationResult = await translationService.translate(title, originalText);
-    console.log(`[5/5] Tradução OK → notas culturais: ${translationResult.notas_culturais?.length ?? 0}`);
+    console.log(`[4/4] Tradução OK → notas culturais: ${translationResult.notas_culturais?.length ?? 0}`);
 
     return res.json(translationResult);
 

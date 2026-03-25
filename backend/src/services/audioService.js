@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 const { v4: uuidv4 } = require('uuid');
 const { create } = require('yt-dlp-exec');
 
@@ -58,26 +59,42 @@ function ytDlpOptions(extra = {}) {
   };
 }
 
+// Busca título via YouTube oEmbed (API pública, sem autenticação, sem seleção de formato).
+// Retorna apenas o título — duração é verificada no download via --match-filter.
 async function getMetadata(url) {
   url = normalizeYoutubeUrl(url);
-  try {
-    // --print + --no-check-formats evita a seleção de formato que causa
-    // "Requested format is not available" — para metadados não precisamos de formato.
-    const raw = await ytDlp(url, ytDlpOptions({
-      print: '%(title)s\n%(duration)s',
-      skipDownload: true,
-      noCheckFormats: true,
-    }));
 
-    const lines = String(raw).trim().split('\n');
-    const title = lines[0] || 'Música sem título';
-    const duration = parseInt(lines[1]) || 0;
+  const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
 
-    return { title, duration };
-  } catch (err) {
-    console.error('[yt-dlp] Falha ao buscar metadados:', err.message);
-    throw new Error('Não foi possível acessar o vídeo. Verifique a URL ou se o yt-dlp está instalado no PATH.');
-  }
+  return new Promise((resolve) => {
+    const req = https.get(oembedUrl, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          const title = json.title || 'Música sem título';
+          console.log(`[oEmbed] título: "${title}"`);
+          // duration=0 → rota usa --match-filter no download para checar duração
+          resolve({ title, duration: 0 });
+        } catch {
+          console.warn('[oEmbed] falha ao parsear resposta, usando título padrão');
+          resolve({ title: 'Música sem título', duration: 0 });
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      console.warn('[oEmbed] erro de rede:', err.message);
+      resolve({ title: 'Música sem título', duration: 0 });
+    });
+
+    req.setTimeout(8000, () => {
+      req.destroy();
+      console.warn('[oEmbed] timeout');
+      resolve({ title: 'Música sem título', duration: 0 });
+    });
+  });
 }
 
 async function downloadAudio(url) {
@@ -90,8 +107,14 @@ async function downloadAudio(url) {
       audioFormat: 'mp3',
       audioQuality: '64K',
       output: filePath,
+      // Rejeita vídeos com mais de 7 minutos (420s) diretamente no yt-dlp
+      matchFilter: 'duration <= 420',
     }));
   } catch (err) {
+    // yt-dlp sinaliza vídeo longo com "does not pass filter" na mensagem
+    if (err.message && err.message.includes('does not pass filter')) {
+      throw new Error('Vídeo muito longo. O limite é 7 minutos.');
+    }
     console.error('[yt-dlp] Falha no download do áudio:', err.message);
     throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp e ffmpeg estão instalados no PATH.');
   }
