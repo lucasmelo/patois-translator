@@ -63,6 +63,8 @@ async function getMetadata(url) {
   try {
     const info = await ytDlp(url, ytDlpOptions({
       dumpSingleJson: true,
+      skipDownload: true,
+      format: 'bestaudio/best',
     }));
 
     return {
