@@ -61,16 +61,18 @@ function ytDlpOptions(extra = {}) {
 async function getMetadata(url) {
   url = normalizeYoutubeUrl(url);
   try {
-    const info = await ytDlp(url, ytDlpOptions({
-      dumpSingleJson: true,
+    // --print extrai apenas campos de metadados sem fazer seleção de formato,
+    // evitando o erro "Requested format is not available" do --dump-single-json.
+    const raw = await ytDlp(url, ytDlpOptions({
+      print: '%(title)s\n%(duration)s',
       skipDownload: true,
-      format: 'bestaudio/best',
     }));
 
-    return {
-      title: info.title || 'Música sem título',
-      duration: info.duration || 0,
-    };
+    const lines = String(raw).trim().split('\n');
+    const title = lines[0] || 'Música sem título';
+    const duration = parseInt(lines[1]) || 0;
+
+    return { title, duration };
   } catch (err) {
     console.error('[yt-dlp] Falha ao buscar metadados:', err.message);
     throw new Error('Não foi possível acessar o vídeo. Verifique a URL ou se o yt-dlp está instalado no PATH.');
