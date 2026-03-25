@@ -101,27 +101,32 @@ async function getMetadata(url) {
 
 async function downloadAudio(url) {
   url = normalizeYoutubeUrl(url);
-  const filePath = path.join(TEMP_DIR, `${uuidv4()}.mp3`);
+  const baseName = uuidv4();
+  // %(ext)s: yt-dlp preenche com a extensão real (m4a, webm, etc.)
+  const outputTemplate = path.join(TEMP_DIR, `${baseName}.%(ext)s`);
 
   try {
+    // Pede stream de áudio nativo — NÃO requer ffmpeg para conversão.
+    // m4a (ios client) e webm/opus (web client) são aceitos pelo Groq Whisper.
     await ytDlp(url, ytDlpOptions({
-      extractAudio: true,
-      audioFormat: 'mp3',
-      audioQuality: '64K',
-      output: filePath,
-      // Rejeita vídeos com mais de 7 minutos (420s) diretamente no yt-dlp
+      format: 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',
+      output: outputTemplate,
       matchFilter: 'duration <= 420',
     }));
   } catch (err) {
-    // yt-dlp sinaliza vídeo longo com "does not pass filter" na mensagem
-    if (err.message && err.message.includes('does not pass filter')) {
+    if (err.message?.includes('does not pass filter')) {
       throw new Error('Vídeo muito longo. O limite é 7 minutos.');
     }
     console.error('[yt-dlp] Falha no download do áudio:', err.message);
-    throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp e ffmpeg estão instalados no PATH.');
+    throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp está instalado no PATH.');
   }
 
-  return filePath;
+  // Encontra o arquivo baixado (extensão determinada pelo yt-dlp)
+  if (!fs.existsSync(TEMP_DIR)) throw new Error('Diretório temp não encontrado.');
+  const downloaded = fs.readdirSync(TEMP_DIR).find(f => f.startsWith(baseName));
+  if (!downloaded) throw new Error('Arquivo de áudio não encontrado após o download.');
+
+  return path.join(TEMP_DIR, downloaded);
 }
 
 async function deleteFile(filePath) {

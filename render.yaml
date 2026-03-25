@@ -4,7 +4,7 @@ services:
     runtime: node
     rootDir: backend
     # Baixa o binário yt-dlp direto para backend/bin/ (path controlado, sem depender do PATH do sistema)
-    buildCommand: mkdir -p bin && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o bin/yt-dlp && chmod +x bin/yt-dlp && npm install --ignore-scripts
+    buildCommand: mkdir -p bin && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o bin/yt-dlp && chmod +x bin/yt-dlp && (apt-get install -y ffmpeg 2>/dev/null || true) && npm install --ignore-scripts
     startCommand: node src/index.js
     envVars:
       - key: NODE_ENV
