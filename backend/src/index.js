@@ -9,9 +9,11 @@ const PORT = process.env.PORT || 3000;
 
 // Em produção: define FRONTEND_URL no Render (ex: https://seu-app.vercel.app)
 // Se não definida, libera todas as origens (ok para beta sem cookies/credenciais)
-const corsOrigin = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL, 'http://localhost:4200']
-  : true; // true = reflete a origem do request (equivalente a * mas compatível com todas as configs)
+// Remove trailing slash caso FRONTEND_URL seja salva com "/" no final (ex: Render dashboard)
+const frontendUrl = process.env.FRONTEND_URL?.replace(/\/+$/, '');
+const corsOrigin = frontendUrl
+  ? [frontendUrl, 'http://localhost:4200']
+  : true;
 
 app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
