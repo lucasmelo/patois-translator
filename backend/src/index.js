@@ -7,11 +7,13 @@ const translateRouter = require('./routes/translate');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = process.env.FRONTEND_URL
+// Em produção: define FRONTEND_URL no Render (ex: https://seu-app.vercel.app)
+// Se não definida, libera todas as origens (ok para beta sem cookies/credenciais)
+const corsOrigin = process.env.FRONTEND_URL
   ? [process.env.FRONTEND_URL, 'http://localhost:4200']
-  : ['http://localhost:4200'];
+  : true; // true = reflete a origem do request (equivalente a * mas compatível com todas as configs)
 
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
 app.use('/api', translateRouter);
