@@ -5,13 +5,42 @@ const { v4: uuidv4 } = require('uuid');
 
 const TEMP_DIR = path.join(__dirname, '../../temp');
 
+// Normaliza qualquer variante de URL do YouTube para watch?v=ID limpo,
+// eliminando &list=, &index=, &start_radio= e outros parâmetros extras.
+function normalizeYoutubeUrl(raw) {
+  try {
+    const url = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
+
+    // youtu.be/VIDEO_ID
+    if (url.hostname === 'youtu.be') {
+      const videoId = url.pathname.slice(1).split('?')[0];
+      return `https://www.youtube.com/watch?v=${videoId}`;
+    }
+
+    // youtube.com/shorts/VIDEO_ID
+    if (url.pathname.includes('/shorts/')) {
+      const videoId = url.pathname.split('/shorts/')[1].split('/')[0];
+      return `https://www.youtube.com/watch?v=${videoId}`;
+    }
+
+    // youtube.com/watch?v=VIDEO_ID  (descarta &list= e qualquer outro param)
+    const videoId = url.searchParams.get('v');
+    if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+
+  } catch { /* URL malformada — deixa o yt-dlp rejeitar */ }
+
+  return raw;
+}
+
 async function getMetadata(url) {
+  url = normalizeYoutubeUrl(url);
   try {
     const info = await ytDlp(url, {
       dumpSingleJson: true,
       noWarnings: true,
       noCheckCertificates: true,
       preferFreeFormats: true,
+      noPlaylist: true,
     });
 
     return {
@@ -25,6 +54,7 @@ async function getMetadata(url) {
 }
 
 async function downloadAudio(url) {
+  url = normalizeYoutubeUrl(url);
   const fileName = `${uuidv4()}.mp3`;
   const filePath = path.join(TEMP_DIR, fileName);
 
@@ -36,6 +66,7 @@ async function downloadAudio(url) {
       output: filePath,
       noWarnings: true,
       noCheckCertificates: true,
+      noPlaylist: true,
     });
   } catch (err) {
     console.error('[yt-dlp] Falha no download do áudio:', err.message);
