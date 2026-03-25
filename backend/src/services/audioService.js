@@ -1,8 +1,10 @@
-// Usa o binário 'yt-dlp' do PATH do sistema em vez do bundled (que não existe no Render).
-// Em produção: pip install yt-dlp coloca o binário em /usr/local/bin/yt-dlp (no PATH).
-// Em dev Windows: requer yt-dlp instalado manualmente e no PATH.
+// Em produção (Render): o build baixa o binário para backend/bin/yt-dlp via curl.
+// Em dev (Windows/Mac): usa 'yt-dlp' do PATH do sistema.
 const { create } = require('yt-dlp-exec');
-const ytDlp = create('yt-dlp');
+const LOCAL_BIN = path.join(__dirname, '../../bin/yt-dlp');
+const YT_DLP_BIN = fs.existsSync(LOCAL_BIN) ? LOCAL_BIN : 'yt-dlp';
+const ytDlp = create(YT_DLP_BIN);
+console.log(`[yt-dlp] usando binário: ${YT_DLP_BIN}`);
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');

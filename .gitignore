@@ -10,6 +10,9 @@ dist/
 build/
 .angular/
 
+# Binário yt-dlp baixado no build do Render (Linux, não commitar)
+backend/bin/yt-dlp
+
 # Audio temporários (NUNCA commitar)
 backend/temp/*.mp3
 backend/temp/*.ogg
