@@ -19,8 +19,12 @@ let COOKIES_FILE = null;
 if (process.env.YOUTUBE_COOKIES) {
   if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
   COOKIES_FILE = path.join(TEMP_DIR, 'yt_cookies.txt');
-  fs.writeFileSync(COOKIES_FILE, process.env.YOUTUBE_COOKIES, 'utf8');
-  console.log('[yt-dlp] cookies carregados via YOUTUBE_COOKIES');
+  // Trim para evitar espaços/newlines extras inseridos por dashboards (Render, etc.)
+  const cookiesContent = process.env.YOUTUBE_COOKIES.trim();
+  fs.writeFileSync(COOKIES_FILE, cookiesContent, 'utf8');
+  const lines = cookiesContent.split('\n').filter(l => l && !l.startsWith('#')).length;
+  console.log(`[yt-dlp] cookies carregados: ${lines} entradas`);
+  if (lines === 0) console.warn('[yt-dlp] AVISO: arquivo de cookies sem entradas válidas — verifique o formato Netscape');
 } else {
   console.warn('[yt-dlp] YOUTUBE_COOKIES não definida — pode falhar em IPs de datacenter');
 }
