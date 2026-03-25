@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: patois-translator-backend
+    runtime: node
+    rootDir: backend
+    # pip instala o yt-dlp no PATH do sistema (/usr/local/bin/yt-dlp)
+    # --ignore-scripts evita a checagem de Python do postinstall do yt-dlp-exec
+    buildCommand: pip install yt-dlp && npm install --ignore-scripts
+    startCommand: node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GROQ_API_KEY
+        sync: false   # preencher manualmente no painel do Render

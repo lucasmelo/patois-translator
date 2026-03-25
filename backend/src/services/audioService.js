@@ -1,4 +1,8 @@
-const ytDlp = require('yt-dlp-exec');
+// Usa o binário 'yt-dlp' do PATH do sistema em vez do bundled (que não existe no Render).
+// Em produção: pip install yt-dlp coloca o binário em /usr/local/bin/yt-dlp (no PATH).
+// Em dev Windows: requer yt-dlp instalado manualmente e no PATH.
+const { create } = require('yt-dlp-exec');
+const ytDlp = create('yt-dlp');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
