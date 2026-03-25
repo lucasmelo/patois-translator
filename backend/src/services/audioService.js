@@ -1,13 +1,14 @@
+const path = require('path');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const { create } = require('yt-dlp-exec');
+
 // Em produção (Render): o build baixa o binário para backend/bin/yt-dlp via curl.
 // Em dev (Windows/Mac): usa 'yt-dlp' do PATH do sistema.
-const { create } = require('yt-dlp-exec');
 const LOCAL_BIN = path.join(__dirname, '../../bin/yt-dlp');
 const YT_DLP_BIN = fs.existsSync(LOCAL_BIN) ? LOCAL_BIN : 'yt-dlp';
 const ytDlp = create(YT_DLP_BIN);
 console.log(`[yt-dlp] usando binário: ${YT_DLP_BIN}`);
-const path = require('path');
-const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
 
 const TEMP_DIR = path.join(__dirname, '../../temp');
 
