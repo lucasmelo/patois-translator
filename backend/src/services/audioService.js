@@ -54,6 +54,8 @@ function ytDlpOptions(extra = {}) {
     noWarnings: true,
     noCheckCertificates: true,
     noPlaylist: true,
+    // ios client bypassa restrições de formato em IPs de datacenter
+    extractorArgs: 'youtube:player_client=ios,web',
     ...(COOKIES_FILE ? { cookies: COOKIES_FILE } : {}),
     ...extra,
   };
