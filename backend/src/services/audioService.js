@@ -61,11 +61,12 @@ function ytDlpOptions(extra = {}) {
 async function getMetadata(url) {
   url = normalizeYoutubeUrl(url);
   try {
-    // --print extrai apenas campos de metadados sem fazer seleção de formato,
-    // evitando o erro "Requested format is not available" do --dump-single-json.
+    // --print + --no-check-formats evita a seleção de formato que causa
+    // "Requested format is not available" — para metadados não precisamos de formato.
     const raw = await ytDlp(url, ytDlpOptions({
       print: '%(title)s\n%(duration)s',
       skipDownload: true,
+      noCheckFormats: true,
     }));
 
     const lines = String(raw).trim().split('\n');
