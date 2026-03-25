@@ -48,6 +48,9 @@ async function getMetadata(url) {
       noCheckCertificates: true,
       preferFreeFormats: true,
       noPlaylist: true,
+      // Usa o client iOS do YouTube — bypassa o challenge "confirm you're not a bot"
+      // que o YouTube impõe em IPs de datacenter para o client web padrão
+      extractorArgs: 'youtube:player_client=ios',
     });
 
     return {
@@ -74,6 +77,7 @@ async function downloadAudio(url) {
       noWarnings: true,
       noCheckCertificates: true,
       noPlaylist: true,
+      extractorArgs: 'youtube:player_client=ios',
     });
   } catch (err) {
     console.error('[yt-dlp] Falha no download do áudio:', err.message);
