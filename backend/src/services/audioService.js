@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
 const { v4: uuidv4 } = require('uuid');
 const { create } = require('yt-dlp-exec');
 
@@ -19,12 +18,8 @@ let COOKIES_FILE = null;
 if (process.env.YOUTUBE_COOKIES) {
   if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
   COOKIES_FILE = path.join(TEMP_DIR, 'yt_cookies.txt');
-  // Trim para evitar espaços/newlines extras inseridos por dashboards (Render, etc.)
-  const cookiesContent = process.env.YOUTUBE_COOKIES.trim();
-  fs.writeFileSync(COOKIES_FILE, cookiesContent, 'utf8');
-  const lines = cookiesContent.split('\n').filter(l => l && !l.startsWith('#')).length;
-  console.log(`[yt-dlp] cookies carregados: ${lines} entradas`);
-  if (lines === 0) console.warn('[yt-dlp] AVISO: arquivo de cookies sem entradas válidas — verifique o formato Netscape');
+  fs.writeFileSync(COOKIES_FILE, process.env.YOUTUBE_COOKIES, 'utf8');
+  console.log('[yt-dlp] cookies carregados via YOUTUBE_COOKIES');
 } else {
   console.warn('[yt-dlp] YOUTUBE_COOKIES não definida — pode falhar em IPs de datacenter');
 }
@@ -58,80 +53,45 @@ function ytDlpOptions(extra = {}) {
     noWarnings: true,
     noCheckCertificates: true,
     noPlaylist: true,
-    // android_music + ios: clientes que recebem manifests diferentes e menos restritos
-    extractorArgs: 'youtube:player_client=android_music,ios,web',
-    geoBypass: true,
     ...(COOKIES_FILE ? { cookies: COOKIES_FILE } : {}),
     ...extra,
   };
 }
 
-// Busca título via YouTube oEmbed (API pública, sem autenticação, sem seleção de formato).
-// Retorna apenas o título — duração é verificada no download via --match-filter.
 async function getMetadata(url) {
   url = normalizeYoutubeUrl(url);
+  try {
+    const info = await ytDlp(url, ytDlpOptions({
+      dumpSingleJson: true,
+    }));
 
-  const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
-
-  return new Promise((resolve) => {
-    const req = https.get(oembedUrl, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          const title = json.title || 'Música sem título';
-          console.log(`[oEmbed] título: "${title}"`);
-          // duration=0 → rota usa --match-filter no download para checar duração
-          resolve({ title, duration: 0 });
-        } catch {
-          console.warn('[oEmbed] falha ao parsear resposta, usando título padrão');
-          resolve({ title: 'Música sem título', duration: 0 });
-        }
-      });
-    });
-
-    req.on('error', (err) => {
-      console.warn('[oEmbed] erro de rede:', err.message);
-      resolve({ title: 'Música sem título', duration: 0 });
-    });
-
-    req.setTimeout(8000, () => {
-      req.destroy();
-      console.warn('[oEmbed] timeout');
-      resolve({ title: 'Música sem título', duration: 0 });
-    });
-  });
+    return {
+      title: info.title || 'Música sem título',
+      duration: info.duration || 0,
+    };
+  } catch (err) {
+    console.error('[yt-dlp] Falha ao buscar metadados:', err.message);
+    throw new Error('Não foi possível acessar o vídeo. Verifique a URL ou se o yt-dlp está instalado no PATH.');
+  }
 }
 
 async function downloadAudio(url) {
   url = normalizeYoutubeUrl(url);
-  const baseName = uuidv4();
-  // %(ext)s: yt-dlp preenche com a extensão real (m4a, webm, etc.)
-  const outputTemplate = path.join(TEMP_DIR, `${baseName}.%(ext)s`);
+  const filePath = path.join(TEMP_DIR, `${uuidv4()}.mp3`);
 
   try {
-    // Pede stream de áudio nativo — NÃO requer ffmpeg para conversão.
-    // m4a (ios client) e webm/opus (web client) são aceitos pelo Groq Whisper.
     await ytDlp(url, ytDlpOptions({
-      format: 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',
-      output: outputTemplate,
-      matchFilter: 'duration <= 420',
+      extractAudio: true,
+      audioFormat: 'mp3',
+      audioQuality: '64K',
+      output: filePath,
     }));
   } catch (err) {
-    if (err.message?.includes('does not pass filter')) {
-      throw new Error('Vídeo muito longo. O limite é 7 minutos.');
-    }
     console.error('[yt-dlp] Falha no download do áudio:', err.message);
-    throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp está instalado no PATH.');
+    throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp e ffmpeg estão instalados no PATH.');
   }
 
-  // Encontra o arquivo baixado (extensão determinada pelo yt-dlp)
-  if (!fs.existsSync(TEMP_DIR)) throw new Error('Diretório temp não encontrado.');
-  const downloaded = fs.readdirSync(TEMP_DIR).find(f => f.startsWith(baseName));
-  if (!downloaded) throw new Error('Arquivo de áudio não encontrado após o download.');
-
-  return path.join(TEMP_DIR, downloaded);
+  return filePath;
 }
 
 async function deleteFile(filePath) {

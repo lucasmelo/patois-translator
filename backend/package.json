@@ -14,7 +14,6 @@
     "express": "^4.19.2",
     "groq-sdk": "^0.13.0",
     "uuid": "^10.0.0",
-    "youtube-transcript": "^1.2.1",
     "yt-dlp-exec": "^1.0.2"
   },
   "devDependencies": {
