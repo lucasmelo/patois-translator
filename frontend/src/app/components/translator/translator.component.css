@@ -37,6 +37,105 @@
   line-height: 1.6;
 }
 
+/* Mode Tabs */
+.mode-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+}
+
+.mode-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.55rem 1rem;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mode-tab:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.mode-tab--active {
+  background: var(--surface-3);
+  color: var(--jamaica-yellow);
+}
+
+.mode-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Text mode */
+.text-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.text-mode__title {
+  background: var(--surface);
+  border: 2px solid var(--surface-3);
+  border-radius: var(--radius);
+  padding: 0.65rem 1rem;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.text-mode__title:focus {
+  border-color: var(--jamaica-yellow);
+}
+
+.text-mode__title::placeholder {
+  color: var(--text-secondary);
+}
+
+.text-mode__lyrics {
+  background: var(--surface);
+  border: 2px solid var(--surface-3);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-family: var(--font-lyrics);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  outline: none;
+  resize: vertical;
+  min-height: 160px;
+  transition: border-color 0.2s;
+}
+
+.text-mode__lyrics:focus {
+  border-color: var(--jamaica-yellow);
+}
+
+.text-mode__lyrics::placeholder {
+  color: var(--text-secondary);
+}
+
+.text-mode__lyrics:disabled,
+.text-mode__title:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.search-box__btn--full {
+  width: 100%;
+  justify-content: center;
+}
+
 /* Search Box */
 .search-box {
   max-width: 720px;
@@ -157,7 +256,7 @@
   border: 1px solid rgba(255, 77, 77, 0.35);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #ff7070;
+  color: #ff9999;
   line-height: 1.5;
 }
 

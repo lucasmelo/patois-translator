@@ -29,5 +29,5 @@ Thumbs.db
 .idea/
 *.swp
 
-# Claude Code local config (settings e rules ficam locais, CLAUDE.md vai pro repo)
-.claude/
+# Claude Code — settings locais não vão pro repo, rules vão
+.claude/settings.local.json

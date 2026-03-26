@@ -9,7 +9,11 @@ export class TranslationService {
   private readonly http = inject(HttpClient);
   private readonly apiBase = environment.apiUrl;
 
-  translate(url: string): Observable<TranslationResult> {
+  translateUrl(url: string): Observable<TranslationResult> {
     return this.http.post<TranslationResult>(`${this.apiBase}/api/translate`, { url });
+  }
+
+  translateText(title: string, text: string): Observable<TranslationResult> {
+    return this.http.post<TranslationResult>(`${this.apiBase}/api/translate`, { title, text });
   }
 }

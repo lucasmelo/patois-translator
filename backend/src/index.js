@@ -24,9 +24,6 @@ app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 
   if (!process.env.GROQ_API_KEY) {
-    console.warn('AVISO: GROQ_API_KEY não definida. Transcrição não funcionará.');
-  }
-  if (!process.env.GEMINI_API_KEY) {
-    console.warn('AVISO: GEMINI_API_KEY não definida. Tradução não funcionará.');
+    console.warn('AVISO: GROQ_API_KEY não definida. Tradução não funcionará.');
   }
 });

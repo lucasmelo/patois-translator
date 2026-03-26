@@ -9,37 +9,102 @@
 </section>
 
 <div class="search-box">
-  <div class="search-box__inner">
-    <input
-      class="search-box__input"
-      type="url"
-      placeholder="Cole aqui o link do YouTube (máx. 7 minutos)..."
-      [ngModel]="url()"
-      (ngModelChange)="url.set($event)"
-      (keyup.enter)="translate()"
-      [disabled]="loading()"
-      aria-label="URL do YouTube"
-    />
+
+  <!-- Tabs de modo de entrada -->
+  <div class="mode-tabs" role="tablist">
     <button
-      class="search-box__btn"
-      (click)="translate()"
+      class="mode-tab"
+      [class.mode-tab--active]="inputMode() === 'url'"
+      (click)="setMode('url')"
       [disabled]="loading()"
-      [class.search-box__btn--loading]="loading()"
+      role="tab"
+      [attr.aria-selected]="inputMode() === 'url'"
     >
-      @if (loading()) {
-        <span class="spinner" aria-hidden="true"></span>
-        <span>Processando...</span>
-      } @else {
-        <span>Traduzir</span>
-      }
+      Link do YouTube
+    </button>
+    <button
+      class="mode-tab"
+      [class.mode-tab--active]="inputMode() === 'text'"
+      (click)="setMode('text')"
+      [disabled]="loading()"
+      role="tab"
+      [attr.aria-selected]="inputMode() === 'text'"
+    >
+      Colar Letra
     </button>
   </div>
 
-  @if (loading()) {
-    <div class="status-bar" role="status" aria-live="polite">
-      <span class="status-bar__dot"></span>
-      Baixando áudio, transcrevendo e traduzindo com IA... isso pode levar ~30 segundos.
+  <!-- Modo URL -->
+  @if (inputMode() === 'url') {
+    <div class="search-box__inner">
+      <input
+        class="search-box__input"
+        type="url"
+        placeholder="Cole aqui o link do YouTube..."
+        [ngModel]="url()"
+        (ngModelChange)="url.set($event)"
+        (keyup.enter)="translate()"
+        [disabled]="loading()"
+        aria-label="URL do YouTube"
+      />
+      <button
+        class="search-box__btn"
+        (click)="translate()"
+        [disabled]="loading()"
+        [class.search-box__btn--loading]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Processando...</span>
+        } @else {
+          <span>Traduzir</span>
+        }
+      </button>
     </div>
+  }
+
+  <!-- Modo Texto -->
+  @if (inputMode() === 'text') {
+    <div class="text-mode">
+      <input
+        class="text-mode__title"
+        type="text"
+        placeholder="Nome da música (opcional)"
+        [ngModel]="songTitle()"
+        (ngModelChange)="songTitle.set($event)"
+        [disabled]="loading()"
+        aria-label="Título da música"
+      />
+      <textarea
+        class="text-mode__lyrics"
+        placeholder="Cole aqui a letra original (em inglês / Patois)..."
+        [ngModel]="lyricsText()"
+        (ngModelChange)="lyricsText.set($event)"
+        [disabled]="loading()"
+        rows="8"
+        aria-label="Letra da música"
+      ></textarea>
+      <button
+        class="search-box__btn search-box__btn--full"
+        (click)="translate()"
+        [disabled]="loading()"
+        [class.search-box__btn--loading]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Traduzindo...</span>
+        } @else {
+          <span>Traduzir</span>
+        }
+      </button>
+    </div>
+  }
+
+  @if (loading()) {
+    <output class="status-bar">
+      <span class="status-bar__dot"></span>
+      {{ statusMessage() }}
+    </output>
   }
 
   @if (error()) {
