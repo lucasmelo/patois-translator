@@ -83,7 +83,7 @@ async function downloadAudio(url) {
     await ytDlp(url, ytDlpOptions({
       extractAudio: true,
       audioFormat: 'mp3',
-      audioQuality: '64K',
+      audioQuality: '0',
       output: filePath,
     }));
   } catch (err) {
