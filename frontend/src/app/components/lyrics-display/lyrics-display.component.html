@@ -7,24 +7,26 @@
   <p class="context-card__body">{{ result().analise_de_contexto }}</p>
 </div>
 
-<!-- Letras lado a lado -->
-<div class="lyrics-grid">
-  <div class="lyrics-column lyrics-column--original">
-    <div class="lyrics-column__header">
-      <span class="lyrics-column__flag">🇯🇲</span>
-      <h3 class="lyrics-column__title">Patois Original</h3>
-    </div>
-    <pre class="lyrics-column__text">{{ result().letra_original }}</pre>
+<!-- Letras intercaladas linha a linha -->
+<div class="lyrics-interleaved">
+  <div class="lyrics-interleaved__header">
+    <span>🇯🇲</span>
+    <span class="lyrics-interleaved__label">Patois Original</span>
+    <span class="lyrics-interleaved__sep">/</span>
+    <span>🇧🇷</span>
+    <span class="lyrics-interleaved__label">Português do Brasil</span>
   </div>
-
-  <div class="lyrics-divider" aria-hidden="true"></div>
-
-  <div class="lyrics-column lyrics-column--translated">
-    <div class="lyrics-column__header">
-      <span class="lyrics-column__flag">🇧🇷</span>
-      <h3 class="lyrics-column__title">Português do Brasil</h3>
-    </div>
-    <pre class="lyrics-column__text">{{ result().letra_traduzida }}</pre>
+  <div class="lyrics-interleaved__body">
+    @for (pair of pairedLines(); track $index) {
+      @if (pair.en || pair.pt) {
+        <div class="line-pair">
+          <p class="line-en">{{ pair.en }}</p>
+          <p class="line-pt">{{ pair.pt }}</p>
+        </div>
+      } @else {
+        <div class="line-break"></div>
+      }
+    }
   </div>
 </div>
 

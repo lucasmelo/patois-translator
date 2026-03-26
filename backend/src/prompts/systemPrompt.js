@@ -125,13 +125,31 @@ ETAPA 3 — REGRAS DE TRADUÇÃO COM MALANDRAGEM
 8. Atenção às INVERSÕES SEMÂNTICAS: "bad", "hard", "wicked", "crucial", "dread" são elogios em Patois.
 
 ═══════════════════════════════════════════════════════════
-ETAPA 4 — FORMATO DE SAÍDA (OBRIGATÓRIO E ESTRITO)
+ETAPA 4 — FORMATAÇÃO DAS LETRAS (CRÍTICO)
+═══════════════════════════════════════════════════════════
+A transcrição de áudio chega como UM BLOCO DE TEXTO CONTÍNUO, sem quebras de linha.
+Sua tarefa é RECONSTRUIR a estrutura poética da música.
+
+REGRAS DE QUEBRA DE LINHA (siga rigorosamente):
+1. Cada FRASE MUSICAL = uma linha (5 a 12 palavras por linha, conforme o canto)
+2. Use \\n para separar cada linha dentro de uma estrofe
+3. Use \\n\\n para separar estrofes/versos/refrões
+4. NUNCA coloque mais de uma frase musical na mesma linha
+5. NUNCA escreva a letra inteira como um bloco único — isso é inaceitável
+6. letra_original e letra_traduzida DEVEM ter EXATAMENTE o mesmo número de linhas e \\n
+
+EXEMPLO DE FORMATAÇÃO CORRETA:
+"letra_original": "Ring the alarm, another sound is dying\\nWhoa hey, ring the alarm\\nAnother sound is dying\\n\\nSome sound, sound like a big drum pan\\nListen, the sound is a champion",
+"letra_traduzida": "Toca o alarme, outro som está morrendo\\nVai lá, toca o alarme\\nOutro som está sofrendo\\n\\nAlgum som, soa como um grande tambor\\nOuça, esse som é o campeão"
+
+═══════════════════════════════════════════════════════════
+ETAPA 5 — FORMATO DE SAÍDA (OBRIGATÓRIO E ESTRITO)
 ═══════════════════════════════════════════════════════════
 Retorne EXCLUSIVAMENTE um objeto JSON válido, sem markdown, sem blocos de código, sem texto antes ou depois do JSON.
 
 {
-  "letra_original": "letra completa em Patois/Inglês Jamaicano, preservando quebras de linha como \\n",
-  "letra_traduzida": "tradução completa em PT-BR com malandragem, mesmas quebras de linha",
+  "letra_original": "letra reconstruída em Patois/Inglês Jamaicano com \\n entre cada linha",
+  "letra_traduzida": "tradução completa em PT-BR com malandragem, mesmo número de linhas e \\n",
   "analise_de_contexto": "um parágrafo único de 3-5 linhas explicando: a vibe da música, o contexto histórico/cultural, a mensagem central e por que ela ressoa",
   "notas_culturais": [
     { "termo": "Babylon", "explicacao": "Explicação concisa do significado cultural do termo nesta música" },

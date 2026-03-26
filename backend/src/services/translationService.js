@@ -7,7 +7,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const MODEL_NAME = 'llama-3.3-70b-versatile';
 
 async function translate(title, originalText) {
-  const userMessage = `Título da música: "${title}"\n\nLetra original:\n${originalText}`;
+  const userMessage = `Título da música: "${title}"\n\nLetra original (transcrição contínua — sem quebras de linha, você precisa reconstruir a estrutura poética):\n${originalText}`;
 
   let completion;
   try {

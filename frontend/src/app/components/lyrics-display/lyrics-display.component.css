@@ -44,51 +44,27 @@
   font-size: 0.95rem;
 }
 
-/* Lyrics Grid */
-.lyrics-grid {
-  display: grid;
-  grid-template-columns: 1fr 1px 1fr;
-  gap: 0;
-  max-width: 1200px;
+/* Lyrics Interleaved */
+.lyrics-interleaved {
+  max-width: 860px;
   margin: 0 auto 2.5rem;
   padding: 0 1rem;
-}
-
-.lyrics-divider {
-  background: var(--surface-3);
-  margin: 0 1rem;
-}
-
-.lyrics-column {
   background: var(--surface);
   border-radius: var(--radius);
   overflow: hidden;
 }
 
-.lyrics-column--original {
-  border-right: none;
-  border-radius: var(--radius) 0 0 var(--radius);
-}
-
-.lyrics-column--translated {
-  border-left: none;
-  border-radius: 0 var(--radius) var(--radius) 0;
-}
-
-.lyrics-column__header {
+.lyrics-interleaved__header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 1.25rem;
   border-bottom: 1px solid var(--surface-3);
   background: var(--surface-2);
+  font-size: 1rem;
 }
 
-.lyrics-column__flag {
-  font-size: 1.1rem;
-}
-
-.lyrics-column__title {
+.lyrics-interleaved__label {
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -96,15 +72,41 @@
   color: var(--text-secondary);
 }
 
-.lyrics-column__text {
+.lyrics-interleaved__sep {
+  color: var(--surface-3);
+  margin: 0 0.25rem;
+}
+
+.lyrics-interleaved__body {
+  padding: 1.25rem;
+}
+
+.line-pair {
+  margin-bottom: 0.15rem;
+}
+
+.line-en {
+  font-family: var(--font-lyrics);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.line-pt {
   font-family: var(--font-lyrics);
   font-size: 0.875rem;
-  line-height: 1.9;
-  color: var(--text-primary);
-  padding: 1.25rem;
-  white-space: pre-wrap;
-  word-break: break-word;
-  margin: 0;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem;
+  line-height: 1.6;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--jamaica-green);
+}
+
+.line-break {
+  height: 1rem;
 }
 
 /* Notas Culturais */
@@ -192,19 +194,3 @@
   padding-top: 0.75rem;
 }
 
-/* Responsivo — Mobile */
-@media (max-width: 768px) {
-  .lyrics-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .lyrics-divider {
-    display: none;
-  }
-
-  .lyrics-column--original,
-  .lyrics-column--translated {
-    border-radius: var(--radius);
-  }
-}
