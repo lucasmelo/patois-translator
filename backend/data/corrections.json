@@ -24,5 +24,59 @@
     "linha_pt_original": "Reza pela prisão",
     "linha_en_corrigida": "Fraid the prison",
     "linha_pt_corrigida": "Medo da cadeia"
+  },
+  {
+    "id": "762bd659-141c-4502-9e57-7931f85d7423",
+    "timestamp": "2026-04-02T14:17:54.419Z",
+    "titulo": "Natural Vibes // Life inna prison no nice",
+    "linha_en_original": "You haffi bounce it from the cold concrete",
+    "linha_pt_original": "Você tem que se virar no concreto gelado",
+    "linha_en_corrigida": "You haffi bounce it pon di cold concrete",
+    "linha_pt_corrigida": "Você tem que se virar no concreto gelado"
+  },
+  {
+    "id": "e9815eec-54a1-43ab-9da7-1b2a8ce5c4e4",
+    "timestamp": "2026-04-02T14:21:25.830Z",
+    "titulo": "Natural Vibes // Life inna prison no nice",
+    "linha_en_original": "Living in Jamaica, that's a paradise",
+    "linha_pt_original": "Viver na Jamaica, isso é um paraíso",
+    "linha_en_corrigida": "Living in Jamaica, dat a paradise",
+    "linha_pt_corrigida": "Viver na Jamaica, isso é um paraíso"
+  },
+  {
+    "id": "22a51403-7da2-4f6e-bf13-390a6535807b",
+    "timestamp": "2026-04-02T14:21:29.175Z",
+    "titulo": "Natural Vibes // Life inna prison no nice",
+    "linha_en_original": "Food pon your yard, judge, I know it nice",
+    "linha_pt_original": "Comida no seu barraco, juiz, eu sei que é bom",
+    "linha_en_corrigida": "Food pon your yard, Jah Jah know it nice",
+    "linha_pt_corrigida": "Comida no seu barraco, jah jah, sei que é bom"
+  },
+  {
+    "id": "3a7fb009-3947-4ecd-bdbb-98098d2035d0",
+    "timestamp": "2026-04-02T19:37:20.703Z",
+    "titulo": "Thriller U --  Raggamuffin Mi Supe (Prisoner Of War: The Plan - 1987)",
+    "linha_en_original": "Amy still like a lost by your dog ball",
+    "linha_pt_original": "Amy ainda perdida no seu jogo, véi",
+    "linha_en_corrigida": "Hey mi selecta lets buy off the bar",
+    "linha_pt_corrigida": "Ei, meu seletor, vamos comprar o bar inteiro"
+  },
+  {
+    "id": "487a8b73-784c-46f6-9799-5e5dc8101188",
+    "timestamp": "2026-04-02T19:38:10.995Z",
+    "titulo": "Thriller U --  Raggamuffin Mi Supe (Prisoner Of War: The Plan - 1987)",
+    "linha_en_original": "Come on mi, select a last bag of the bag",
+    "linha_pt_original": "Vem comigo, escolhe o melhor do melhor",
+    "linha_en_corrigida": "Come on mi selecta, lets buy off the bar",
+    "linha_pt_corrigida": "Vem comigo, meu seletor, vamos comprar o bar inteiro"
+  },
+  {
+    "id": "44115f83-0cb7-4f75-9eda-baed66fec1e8",
+    "timestamp": "2026-04-02T19:54:05.337Z",
+    "titulo": "Junior Wilson - No easy",
+    "linha_en_original": "Ya no, mi no easy",
+    "linha_pt_original": "Não, não sou fácil",
+    "linha_en_corrigida": "Jah know, mi no easy",
+    "linha_pt_corrigida": "Jah sabe, não sou fácil"
   }
 ]

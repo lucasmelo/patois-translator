@@ -1,3 +1,23 @@
+<!-- Loading fullscreen -->
+@if (loading()) {
+  <output class="loading-overlay" aria-live="polite" aria-label="Traduzindo música">
+    <div class="loading-content">
+
+      <!-- Baseado animado -->
+      <img
+        class="joint-gif"
+        src="https://media.giphy.com/media/iY0Ua99XEkkB6LaJzX/giphy.gif"
+        alt="baseado queimando"
+      />
+
+      <!-- Frase rotativa -->
+      <p class="loading-phrase">{{ currentPhrase() }}</p>
+      <p class="loading-sub">~30 segundos • one love ✌️</p>
+
+    </div>
+  </output>
+}
+
 <section class="hero">
   <div class="hero__badge">🎵 Reggae & Dancehall</div>
   <h1 class="hero__title">
@@ -10,20 +30,10 @@
 
 <div class="search-box">
   <div class="mode-tabs">
-    <button
-      class="mode-tab"
-      [class.mode-tab--active]="mode() === 'url'"
-      (click)="setMode('url')"
-      [disabled]="loading()"
-    >
+    <button class="mode-tab" [class.mode-tab--active]="mode() === 'url'" (click)="setMode('url')" [disabled]="loading()">
       🔗 Link do YouTube
     </button>
-    <button
-      class="mode-tab"
-      [class.mode-tab--active]="mode() === 'file'"
-      (click)="setMode('file')"
-      [disabled]="loading()"
-    >
+    <button class="mode-tab" [class.mode-tab--active]="mode() === 'file'" (click)="setMode('file')" [disabled]="loading()">
       🎵 Enviar arquivo
     </button>
   </div>
@@ -40,18 +50,8 @@
         [disabled]="loading()"
         aria-label="URL do YouTube"
       />
-      <button
-        class="search-box__btn"
-        (click)="translate()"
-        [disabled]="loading()"
-        [class.search-box__btn--loading]="loading()"
-      >
-        @if (loading()) {
-          <span class="spinner" aria-hidden="true"></span>
-          <span>Processando...</span>
-        } @else {
-          <span>Traduzir</span>
-        }
+      <button class="search-box__btn" (click)="translate()" [disabled]="loading()">
+        <span>Traduzir</span>
       </button>
     </div>
   }
@@ -66,38 +66,11 @@
           <span class="file-label__icon">📂</span>
           <span>Selecionar MP3 ou WAV (máx. 25 MB)</span>
         }
-        <input
-          type="file"
-          accept=".mp3,.wav"
-          class="file-input"
-          (change)="onFileChange($event)"
-          [disabled]="loading()"
-        />
+        <input type="file" accept=".mp3,.wav" class="file-input" (change)="onFileChange($event)" [disabled]="loading()" />
       </label>
-      <button
-        class="search-box__btn"
-        (click)="translate()"
-        [disabled]="loading() || !selectedFile()"
-        [class.search-box__btn--loading]="loading()"
-      >
-        @if (loading()) {
-          <span class="spinner" aria-hidden="true"></span>
-          <span>Processando...</span>
-        } @else {
-          <span>Traduzir</span>
-        }
+      <button class="search-box__btn" (click)="translate()" [disabled]="loading() || !selectedFile()">
+        <span>Traduzir</span>
       </button>
-    </div>
-  }
-
-  @if (loading()) {
-    <div class="status-bar" role="status" aria-live="polite">
-      <span class="status-bar__dot"></span>
-      @if (mode() === 'url') {
-        Baixando áudio, transcrevendo e traduzindo com IA... isso pode levar ~30 segundos.
-      } @else {
-        Transcrevendo e traduzindo com IA... isso pode levar ~20 segundos.
-      }
     </div>
   }
 

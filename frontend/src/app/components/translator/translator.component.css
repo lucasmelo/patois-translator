@@ -1,3 +1,63 @@
+/* ─── Loading Overlay ──────────────────────────────────────────── */
+output.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(8, 8, 8, 0.96);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  user-select: none;
+}
+
+/* ── GIF do baseado ── */
+.joint-gif {
+  width: 220px;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Frases ── */
+.loading-phrase {
+  margin-top: 2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--jamaica-yellow);
+  font-style: italic;
+  text-align: center;
+  min-height: 1.8em;
+  max-width: 360px;
+  line-height: 1.5;
+  /* pulso sincronizado com o intervalo de 3.5s — opacidade cai no meio da troca */
+  animation: phrase-pulse 3.5s ease-in-out infinite;
+}
+
+@keyframes phrase-pulse {
+  0%   { opacity: 1;    transform: translateY(0); }
+  42%  { opacity: 0.85; transform: translateY(0); }
+  50%  { opacity: 0.3;  transform: translateY(4px); }
+  58%  { opacity: 0.85; transform: translateY(0); }
+  100% { opacity: 1;    transform: translateY(0); }
+}
+
+.loading-sub {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #a0a0a0;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────────── */
+
 .hero {
   text-align: center;
   padding: 3rem 1rem 2rem;
@@ -229,7 +289,7 @@
   border: 1px solid rgba(255, 77, 77, 0.35);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #ff7070;
+  color: #ff9999;
   line-height: 1.5;
 }
 

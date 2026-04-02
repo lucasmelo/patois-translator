@@ -6,6 +6,7 @@ const translateRouter = require('./routes/translate');
 const uploadRouter = require('./routes/upload');
 const correctionsRouter = require('./routes/corrections');
 const songsRouter = require('./routes/songs');
+const audioRouter = require('./routes/audio');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,7 @@ app.use('/api', translateRouter);
 app.use('/api', uploadRouter);
 app.use('/api', correctionsRouter);
 app.use('/api', songsRouter);
+app.use('/api', audioRouter);
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
@@ -32,7 +34,7 @@ app.listen(PORT, () => {
   if (!process.env.GROQ_API_KEY) {
     console.warn('AVISO: GROQ_API_KEY não definida. Transcrição não funcionará.');
   }
-  if (!process.env.GEMINI_API_KEY) {
-    console.warn('AVISO: GEMINI_API_KEY não definida. Tradução não funcionará.');
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.warn('AVISO: ANTHROPIC_API_KEY não definida. Tradução não funcionará.');
   }
 });

@@ -7,6 +7,88 @@
   <p class="context-card__body">{{ result().analise_de_contexto }}</p>
 </div>
 
+<!-- Player principal (inline, estilo original) -->
+@if (hasAudio()) {
+  <!-- Elemento de áudio: único, compartilhado pelo player inline e mini-player -->
+  <audio
+    #audioEl
+    [src]="audioUrl()!"
+    (timeupdate)="onTimeUpdate($event)"
+    (durationchange)="onDurationChange($event)"
+    (ended)="onEnded()"
+    (play)="onPlay()"
+    (pause)="onPause()"
+    preload="metadata"
+  ></audio>
+
+  <!-- Player inline -->
+  <div class="karaoke-player" #playerEl>
+    <div class="karaoke-player__inner">
+      <button
+        class="karaoke-player__btn"
+        (click)="togglePlay()"
+        [attr.aria-label]="isPlaying() ? 'Pausar' : 'Tocar'"
+      >
+        @if (isPlaying()) {
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <rect x="4" y="3" width="4" height="14" rx="1"/>
+            <rect x="12" y="3" width="4" height="14" rx="1"/>
+          </svg>
+        } @else {
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M5 3.5l12 6.5-12 6.5V3.5z"/>
+          </svg>
+        }
+      </button>
+
+      <input
+        class="karaoke-player__scrubber"
+        type="range"
+        min="0"
+        [max]="audioDuration()"
+        step="0.1"
+        [value]="currentTime()"
+        [style.--fill]="progressPercent() + '%'"
+        (input)="seekToValue($event)"
+        aria-label="Progresso da música"
+      />
+
+      <span class="karaoke-player__time">{{ formattedTime() }}</span>
+    </div>
+    @if (!isPlaying() && currentTime() === 0) {
+      <p class="karaoke-player__hint">▶ Toque para ativar o karaoke</p>
+    }
+  </div>
+
+  <!-- Mini-player fixo — aparece quando o player principal sai da tela -->
+  <div class="mini-player" [class.mini-player--visible]="miniPlayerVisible()">
+    <div class="mini-player__inner">
+      <button
+        class="mini-player__btn"
+        (click)="togglePlay()"
+        [attr.aria-label]="isPlaying() ? 'Pausar' : 'Tocar'"
+      >
+        @if (isPlaying()) {
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <rect x="4" y="3" width="4" height="14" rx="1"/>
+            <rect x="12" y="3" width="4" height="14" rx="1"/>
+          </svg>
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M5 3.5l12 6.5-12 6.5V3.5z"/>
+          </svg>
+        }
+      </button>
+
+      <div class="mini-player__track">
+        <div class="mini-player__fill" [style.width.%]="progressPercent()"></div>
+      </div>
+
+      <span class="mini-player__time">{{ formattedTime() }}</span>
+    </div>
+  </div>
+}
+
 <!-- Letras intercaladas linha a linha -->
 <div class="lyrics-interleaved">
   <div class="lyrics-interleaved__header">
@@ -22,8 +104,7 @@
       @if (pair.en || pair.pt) {
 
         @if (editingIndex() === $index) {
-          <!-- Modo edição -->
-          <div class="line-edit">
+          <div class="line-edit" [id]="'lyric-line-' + $index">
             <div class="line-edit__fields">
               <input
                 class="line-edit__input line-edit__input--en"
@@ -48,27 +129,26 @@
           </div>
 
         } @else {
-          <!-- Modo visualização -->
-          <div class="line-pair" [class.line-pair--edited]="isEdited($index)">
+          <div
+            class="line-pair"
+            [id]="'lyric-line-' + $index"
+            [class.line-pair--edited]="isEdited($index)"
+            [class.line-pair--active]="activeLineIndex() === $index"
+          >
             <div class="line-pair__content">
               <p class="line-en">{{ pair.en }}</p>
               <p class="line-pt">{{ pair.pt }}</p>
             </div>
             <div class="line-pair__controls">
-              <button
-                class="line-btn line-btn--edit"
-                (click)="startEdit($index)"
-                title="Editar esta linha"
-              >✏️</button>
+              <button class="line-btn line-btn--edit" (click)="startEdit($index)" title="Editar esta linha">✏️</button>
               @if (isEdited($index)) {
                 @if (isSaved($index)) {
                   <span class="line-saved" title="Correção salva">✓</span>
+                } @else if (correctionError() === $index) {
+                  <span class="line-error" title="Erro ao salvar — tente novamente">✕</span>
+                  <button class="line-btn line-btn--save" (click)="saveCorrection($index)" title="Tentar novamente">💾</button>
                 } @else {
-                  <button
-                    class="line-btn line-btn--save"
-                    (click)="saveCorrection($index)"
-                    title="Salvar correção"
-                  >💾</button>
+                  <button class="line-btn line-btn--save" (click)="saveCorrection($index)" title="Salvar correção">💾</button>
                 }
               }
             </div>
@@ -90,11 +170,7 @@
       <span>Tradução salva! Será usada para enriquecer futuras traduções.</span>
     </div>
   } @else {
-    <button
-      class="save-song__btn"
-      (click)="saveSong()"
-      [disabled]="songSaveState() === 'saving'"
-    >
+    <button class="save-song__btn" (click)="saveSong()" [disabled]="songSaveState() === 'saving'">
       @if (songSaveState() === 'saving') {
         <span class="spinner" aria-hidden="true"></span>
         <span>Salvando...</span>
@@ -114,7 +190,6 @@
       <span>📚</span> Notas Culturais
     </h2>
     <p class="notas-section__subtitle">Clique em um termo para expandir a explicação</p>
-
     <div class="notas-grid">
       @for (nota of result().notas_culturais; track trackByTermo($index, nota)) {
         <div
@@ -129,9 +204,7 @@
         >
           <div class="nota-card__header">
             <span class="nota-card__termo">{{ nota.termo }}</span>
-            <span class="nota-card__chevron" [class.nota-card__chevron--open]="isExpanded(nota.termo)">
-              ›
-            </span>
+            <span class="nota-card__chevron" [class.nota-card__chevron--open]="isExpanded(nota.termo)">›</span>
           </div>
           @if (isExpanded(nota.termo)) {
             <p class="nota-card__explicacao">{{ nota.explicacao }}</p>

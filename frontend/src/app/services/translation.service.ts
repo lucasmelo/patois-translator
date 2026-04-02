@@ -23,6 +23,10 @@ export class TranslationService {
     return this.http.post<{ ok: boolean; id: string }>(`${this.apiBase}/api/songs`, result);
   }
 
+  getAudioUrl(audioId: string): string {
+    return `${this.apiBase}/api/audio/${audioId}`;
+  }
+
   saveCorrection(payload: {
     titulo?: string;
     linha_en_original: string;

@@ -10,7 +10,21 @@
       "WebFetch(domain:www.drorlist.com)",
       "Bash(gh repo:*)",
       "Bash(git config:*)",
-      "Bash(git credential-manager:*)"
+      "Bash(git credential-manager:*)",
+      "Bash(git checkout:*)",
+      "Bash(node -e \"require\\(''./src/services/captionService''\\); require\\(''./src/routes/translate''\\); console.log\\(''OK''\\)\")",
+      "Bash(node -e \"const c = require\\(''./src/services/captionService''\\); console.log\\(''captionService OK, exports:'', Object.keys\\(c\\)\\)\")",
+      "Bash(GROQ_API_KEY=test node -e \"require\\(''./src/routes/translate''\\); console.log\\(''route OK''\\)\")",
+      "Bash(GROQ_API_KEY=test node -e \"const c = require\\(''./src/services/captionService''\\); console.log\\(''OK, exports:'', Object.keys\\(c\\)\\)\")",
+      "Bash(GROQ_API_KEY=test node -e \":*)",
+      "WebFetch(domain:www.webtran.pt)",
+      "WebFetch(domain:opengrammar.github.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.martinschaefer.info)",
+      "Bash(gh api:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(x[''''name''''], x[''''path'''']\\) for x in d]\")",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(find /c/Users/Familia/Documents/projeto/frontend/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.html\" \\\\\\) -exec wc -l {} +)"
     ]
   }
 }

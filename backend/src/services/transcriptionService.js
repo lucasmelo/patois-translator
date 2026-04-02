@@ -83,7 +83,7 @@ async function fillGaps(filePath, segments) {
 
   const recovered = [...segments];
   for (const gap of gaps) {
-    const chunkPath = path.join(path.dirname(filePath), `${uuidv4()}_gap.mp3`);
+    const chunkPath = path.join(path.dirname(filePath), `${uuidv4()}_gap.wav`);
     const duration = gap.end - gap.start + 1;
     if (!extractChunk(filePath, gap.start - 0.5, duration + 0.5, chunkPath)) continue;
 
@@ -105,16 +105,18 @@ async function fillGaps(filePath, segments) {
   return recovered.sort((a, b) => a.start - b.start);
 }
 
+// Retorna { text, segments } — segments carregam os timestamps para o karaoke
 async function transcribe(filePath) {
   const result = await callWhisper(filePath);
   let segments = filterSegments(result.segments);
 
-  if (segments.length === 0) return result.text || '';
+  if (segments.length === 0) return { text: result.text || '', segments: [] };
 
   segments = await ensureEarlyStart(filePath, segments);
   segments = await fillGaps(filePath, segments);
 
-  return segments.map(s => s.text.trim()).filter(Boolean).join(' ');
+  const text = segments.map(s => s.text.trim()).filter(Boolean).join(' ');
+  return { text, segments };
 }
 
 module.exports = { transcribe };
