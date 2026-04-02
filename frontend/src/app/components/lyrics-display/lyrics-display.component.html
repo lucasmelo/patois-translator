@@ -15,19 +15,96 @@
     <span class="lyrics-interleaved__sep">/</span>
     <span>🇧🇷</span>
     <span class="lyrics-interleaved__label">Português do Brasil</span>
+    <span class="lyrics-interleaved__hint">— clique no lápis para corrigir uma linha</span>
   </div>
   <div class="lyrics-interleaved__body">
     @for (pair of pairedLines(); track $index) {
       @if (pair.en || pair.pt) {
-        <div class="line-pair">
-          <p class="line-en">{{ pair.en }}</p>
-          <p class="line-pt">{{ pair.pt }}</p>
-        </div>
+
+        @if (editingIndex() === $index) {
+          <!-- Modo edição -->
+          <div class="line-edit">
+            <div class="line-edit__fields">
+              <input
+                class="line-edit__input line-edit__input--en"
+                [(ngModel)]="editEn"
+                placeholder="Linha original (Patois/EN)"
+                (keyup.enter)="confirmEdit($index)"
+                (keyup.escape)="cancelEdit()"
+                autofocus
+              />
+              <input
+                class="line-edit__input line-edit__input--pt"
+                [(ngModel)]="editPt"
+                placeholder="Linha traduzida (PT-BR)"
+                (keyup.enter)="confirmEdit($index)"
+                (keyup.escape)="cancelEdit()"
+              />
+            </div>
+            <div class="line-edit__actions">
+              <button class="line-edit__btn line-edit__btn--confirm" (click)="confirmEdit($index)" title="Confirmar">✓</button>
+              <button class="line-edit__btn line-edit__btn--cancel" (click)="cancelEdit()" title="Cancelar">✕</button>
+            </div>
+          </div>
+
+        } @else {
+          <!-- Modo visualização -->
+          <div class="line-pair" [class.line-pair--edited]="isEdited($index)">
+            <div class="line-pair__content">
+              <p class="line-en">{{ pair.en }}</p>
+              <p class="line-pt">{{ pair.pt }}</p>
+            </div>
+            <div class="line-pair__controls">
+              <button
+                class="line-btn line-btn--edit"
+                (click)="startEdit($index)"
+                title="Editar esta linha"
+              >✏️</button>
+              @if (isEdited($index)) {
+                @if (isSaved($index)) {
+                  <span class="line-saved" title="Correção salva">✓</span>
+                } @else {
+                  <button
+                    class="line-btn line-btn--save"
+                    (click)="saveCorrection($index)"
+                    title="Salvar correção"
+                  >💾</button>
+                }
+              }
+            </div>
+          </div>
+        }
+
       } @else {
         <div class="line-break"></div>
       }
     }
   </div>
+</div>
+
+<!-- Salvar tradução -->
+<div class="save-song">
+  @if (songSaveState() === 'saved') {
+    <div class="save-song__confirm">
+      <span>✅</span>
+      <span>Tradução salva! Será usada para enriquecer futuras traduções.</span>
+    </div>
+  } @else {
+    <button
+      class="save-song__btn"
+      (click)="saveSong()"
+      [disabled]="songSaveState() === 'saving'"
+    >
+      @if (songSaveState() === 'saving') {
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Salvando...</span>
+      } @else {
+        <span>💾</span>
+        <span>Salvar esta tradução</span>
+      }
+    </button>
+    <p class="save-song__hint">Salva a letra e a tradução para enriquecer o vocabulário de futuras músicas.</p>
+  }
 </div>
 
 <!-- Notas Culturais -->

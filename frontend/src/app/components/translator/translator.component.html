@@ -9,36 +9,95 @@
 </section>
 
 <div class="search-box">
-  <div class="search-box__inner">
-    <input
-      class="search-box__input"
-      type="url"
-      placeholder="Cole aqui o link do YouTube (máx. 7 minutos)..."
-      [ngModel]="url()"
-      (ngModelChange)="url.set($event)"
-      (keyup.enter)="translate()"
-      [disabled]="loading()"
-      aria-label="URL do YouTube"
-    />
+  <div class="mode-tabs">
     <button
-      class="search-box__btn"
-      (click)="translate()"
+      class="mode-tab"
+      [class.mode-tab--active]="mode() === 'url'"
+      (click)="setMode('url')"
       [disabled]="loading()"
-      [class.search-box__btn--loading]="loading()"
     >
-      @if (loading()) {
-        <span class="spinner" aria-hidden="true"></span>
-        <span>Processando...</span>
-      } @else {
-        <span>Traduzir</span>
-      }
+      🔗 Link do YouTube
+    </button>
+    <button
+      class="mode-tab"
+      [class.mode-tab--active]="mode() === 'file'"
+      (click)="setMode('file')"
+      [disabled]="loading()"
+    >
+      🎵 Enviar arquivo
     </button>
   </div>
+
+  @if (mode() === 'url') {
+    <div class="search-box__inner">
+      <input
+        class="search-box__input"
+        type="url"
+        placeholder="Cole aqui o link do YouTube (máx. 7 minutos)..."
+        [ngModel]="url()"
+        (ngModelChange)="url.set($event)"
+        (keyup.enter)="translate()"
+        [disabled]="loading()"
+        aria-label="URL do YouTube"
+      />
+      <button
+        class="search-box__btn"
+        (click)="translate()"
+        [disabled]="loading()"
+        [class.search-box__btn--loading]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Processando...</span>
+        } @else {
+          <span>Traduzir</span>
+        }
+      </button>
+    </div>
+  }
+
+  @if (mode() === 'file') {
+    <div class="search-box__inner search-box__inner--file">
+      <label class="file-label" [class.file-label--selected]="!!selectedFile()">
+        @if (selectedFile()) {
+          <span class="file-label__icon">🎵</span>
+          <span class="file-label__name">{{ selectedFile()!.name }}</span>
+        } @else {
+          <span class="file-label__icon">📂</span>
+          <span>Selecionar MP3 ou WAV (máx. 25 MB)</span>
+        }
+        <input
+          type="file"
+          accept=".mp3,.wav"
+          class="file-input"
+          (change)="onFileChange($event)"
+          [disabled]="loading()"
+        />
+      </label>
+      <button
+        class="search-box__btn"
+        (click)="translate()"
+        [disabled]="loading() || !selectedFile()"
+        [class.search-box__btn--loading]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Processando...</span>
+        } @else {
+          <span>Traduzir</span>
+        }
+      </button>
+    </div>
+  }
 
   @if (loading()) {
     <div class="status-bar" role="status" aria-live="polite">
       <span class="status-bar__dot"></span>
-      Baixando áudio, transcrevendo e traduzindo com IA... isso pode levar ~30 segundos.
+      @if (mode() === 'url') {
+        Baixando áudio, transcrevendo e traduzindo com IA... isso pode levar ~30 segundos.
+      } @else {
+        Transcrevendo e traduzindo com IA... isso pode levar ~20 segundos.
+      }
     </div>
   }
 

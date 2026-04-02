@@ -3,6 +3,8 @@ const router = express.Router();
 const audioService = require('../services/audioService');
 const transcriptionService = require('../services/transcriptionService');
 const translationService = require('../services/translationService');
+const correctionsService = require('../services/correctionsService');
+const { collapseRepeats } = require('../services/lyricsUtils');
 
 // Aceita: youtube.com, www.youtube.com, m.youtube.com, youtu.be
 // Aceita parâmetros extras como &list=, &index=, ?t= (extrai só o watch?v=)
@@ -43,12 +45,20 @@ router.post('/translate', async (req, res) => {
     const originalText = await transcriptionService.transcribe(filePath);
     console.log(`[4/5] Transcrição OK → ${originalText.length} caracteres`);
 
-    // 5. Tradução via Gemini
-    console.log(`[5/5] Iniciando tradução cultural via Gemini...`);
-    const translationResult = await translationService.translate(title, originalText);
+    // 5. Tradução com correções humanas anteriores
+    const corrections = correctionsService.findForSong(title);
+    // Passa ao LLM apenas correções vinculadas a esta música (com titulo)
+    const correctionsForPrompt = corrections.filter(c => c.titulo);
+    if (corrections.length > 0) {
+      console.log(`[5/5] ${corrections.length} correção(ões) encontrada(s) para "${title}"`);
+    }
+    console.log(`[5/5] Iniciando tradução cultural via Claude...`);
+    const translationResult = await translationService.translate(title, originalText, correctionsForPrompt);
     console.log(`[5/5] Tradução OK → notas culturais: ${translationResult.notas_culturais?.length ?? 0}`);
 
-    return res.json(translationResult);
+    const corrected = correctionsService.applyToResult(translationResult, title);
+    const finalResult = collapseRepeats(corrected);
+    return res.json({ titulo: title, ...finalResult });
 
   } catch (err) {
     console.error('[ERRO] Pipeline falhou:', err.message);

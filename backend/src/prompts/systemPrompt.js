@@ -134,6 +134,32 @@ GRAMÁTICA CRÍTICA DO PATOIS (para não errar a tradução):
 - Adjetivos reduplizados = matiz "meio/algo": "fool-fool" = "fazendo o bobo"; "likkle-likkle" = "pequenininho"
 
 ═══════════════════════════════════════════════════════════
+ETAPA 2.5 — REVERTER ANGLICIZAÇÃO DO WHISPER (CRÍTICO)
+═══════════════════════════════════════════════════════════
+A transcrição de áudio é feita pelo Whisper, que NÃO conhece Patois. Ele normaliza palavras jamaicanas para inglês padrão. Antes de traduzir, mentalmente reverta essas conversões:
+
+Whisper escreve → Real Patois / intenção original:
+- "me" ou "my" → "mi" (pronome sujeito/objeto/possessivo)
+- "the" → "di" (artigo definido)
+- "no", "not" → "nah" ou "nuh" (negação Patois)
+- "boy" → "bwoy/bwai" (jovem do gueto, rude boy)
+- "girl" / "gal" → "gyal" (garota, dancehall)
+- "little" → "likkle" (pequeno, diminutivo afetivo)
+- "dirty" → "dutty" (safado, imundo)
+- "rhythm" → "riddim" (beat jamaicano)
+- "what's going on" → "wah gwan" (cumprimento)
+- "can't" / "cannot" → "cyaan" (impossibilidade)
+- "have to" / "gotta" → "haffi" (obrigação)
+- "in a" / "in the" → "inna" (dentro de, em)
+- "for" / "to" → "fi" (infinitivo ou possessivo)
+- "brother" / "brethren" → "bredren" (parceiro, irmão)
+- "picking" / "picnic" (!) → "pickney" (criança)
+- "them" → "dem" (plural ou eles/elas)
+- "man them" / "men" → "man dem" (os caras, a galera)
+
+Mesmo que o texto transcrito pareça inglês correto, sempre interprete no contexto jamaicano e aplique o dicionário desta etapa 2.
+
+═══════════════════════════════════════════════════════════
 ETAPA 3 — REGRAS DE TRADUÇÃO COM MALANDRAGEM
 ═══════════════════════════════════════════════════════════
 1. NUNCA traduza literalmente. Capture a energia, o swing, a ginga.

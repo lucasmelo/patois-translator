@@ -81,8 +81,154 @@
   padding: 1.25rem;
 }
 
+.lyrics-interleaved__hint {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+  opacity: 0.6;
+}
+
 .line-pair {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.15rem;
+  border-radius: 6px;
+  padding-right: 0.25rem;
+  transition: background 0.15s;
+}
+
+.line-pair:hover {
+  background: var(--surface-2);
+}
+
+.line-pair--edited .line-en,
+.line-pair--edited .line-pt {
+  color: var(--jamaica-yellow);
+}
+
+.line-pair__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.line-pair__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.line-pair:hover .line-pair__controls {
+  opacity: 1;
+}
+
+.line-pair--edited .line-pair__controls {
+  opacity: 1;
+}
+
+.line-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.line-btn:hover {
+  background: var(--surface-3);
+}
+
+.line-saved {
+  font-size: 0.75rem;
+  color: var(--jamaica-green);
+  font-weight: 700;
+  padding: 0.2rem 0.3rem;
+}
+
+/* Modo edição */
+.line-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: var(--surface-2);
+  border: 1px solid var(--jamaica-yellow);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.line-edit__fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.line-edit__input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--surface-3);
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-lyrics);
+  font-size: 0.875rem;
+  padding: 0.2rem 0;
+  width: 100%;
+}
+
+.line-edit__input--en {
+  font-weight: 700;
+}
+
+.line-edit__input:focus {
+  border-bottom-color: var(--jamaica-yellow);
+}
+
+.line-edit__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.line-edit__btn {
+  background: none;
+  border: 1px solid var(--surface-3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.line-edit__btn--confirm {
+  color: var(--jamaica-green);
+  border-color: var(--jamaica-green);
+}
+
+.line-edit__btn--confirm:hover {
+  background: var(--jamaica-green);
+  color: #fff;
+}
+
+.line-edit__btn--cancel {
+  color: #ff7070;
+  border-color: #ff7070;
+}
+
+.line-edit__btn--cancel:hover {
+  background: #ff7070;
+  color: #1a1a1a;
 }
 
 .line-en {
@@ -107,6 +253,62 @@
 
 .line-break {
   height: 1rem;
+}
+
+/* Salvar tradução */
+.save-song {
+  max-width: 860px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.save-song__btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--jamaica-green);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.75rem 2rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.save-song__btn:hover:not(:disabled) {
+  background: #009148;
+}
+
+.save-song__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.save-song__hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+}
+
+.save-song__confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(0, 122, 61, 0.15);
+  border: 1px solid var(--jamaica-green);
+  border-radius: var(--radius);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2ecc71;
 }
 
 /* Notas Culturais */

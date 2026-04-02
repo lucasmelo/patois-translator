@@ -37,6 +37,42 @@
   line-height: 1.6;
 }
 
+/* Mode Tabs */
+.mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mode-tab {
+  flex: 1;
+  background: var(--surface);
+  border: 2px solid var(--surface-3);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.mode-tab:hover:not(:disabled) {
+  border-color: var(--jamaica-yellow);
+  color: var(--text-primary);
+}
+
+.mode-tab--active {
+  border-color: var(--jamaica-yellow);
+  color: var(--jamaica-yellow);
+}
+
+.mode-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Search Box */
 .search-box {
   max-width: 720px;
@@ -102,6 +138,42 @@
 .search-box__btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+/* File upload */
+.search-box__inner--file {
+  align-items: center;
+}
+
+.file-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+}
+
+.file-label--selected {
+  color: var(--text-primary);
+}
+
+.file-label__icon {
+  flex-shrink: 0;
+}
+
+.file-label__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-input {
+  display: none;
 }
 
 /* Spinner */
