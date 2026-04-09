@@ -95,6 +95,24 @@
   gap: 0.65rem;
 }
 
+.mini-player__skip {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mini-player__skip:hover {
+  background: rgba(0, 0, 0, 0.38);
+  color: #fff;
+}
+
 .mini-player__btn {
   display: flex;
   align-items: center;
@@ -113,19 +131,37 @@
 .mini-player__btn:hover { background: #ffe340; transform: scale(1.08); }
 .mini-player__btn:active { transform: scale(0.93); }
 
-.mini-player__track {
+.mini-player__scrubber {
   flex: 1;
+  min-width: 90px;
+  -webkit-appearance: none;
+  appearance: none;
   height: 3px;
-  background: rgba(255, 255, 255, 0.12);
   border-radius: 2px;
-  overflow: hidden;
+  outline: none;
+  cursor: pointer;
+  background-image: linear-gradient(var(--jamaica-yellow), var(--jamaica-yellow));
+  background-size: var(--fill, 0%) 100%;
+  background-color: rgba(255, 255, 255, 0.12);
+  background-repeat: no-repeat;
 }
 
-.mini-player__fill {
-  height: 100%;
+.mini-player__scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
   background: var(--jamaica-yellow);
-  border-radius: 2px;
-  transition: width 0.2s linear;
+  border: none;
+  box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.18);
+}
+
+.mini-player__scrubber::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--jamaica-yellow);
+  border: none;
 }
 
 .mini-player__time {
@@ -219,46 +255,35 @@
 
 /* ── Linha ativa no karaoke ──────────────────────────────────── */
 .line-pair--active {
-  background: rgba(255, 209, 0, 0.08);
+  background: rgba(255, 209, 0, 0.04);
   border-radius: 6px;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
 }
 
 .line-pair--active .line-en {
-  color: var(--jamaica-yellow);
+  color: #f2d98a;
+  transition: color 0.35s ease;
 }
 
 .line-pair--active .line-pt {
-  color: var(--text-primary);
-  border-left-color: var(--jamaica-yellow);
+  color: #d8d8d8;
+  border-left-color: rgba(255, 209, 0, 0.42);
+  transition: color 0.35s ease, border-left-color 0.35s ease;
 }
 
-/* Karaoke por palavra (linha ativa) */
-.line-en--karaoke,
-.line-pt--karaoke {
-  line-height: 1.55;
+.line-pair--focus {
+  background: rgba(255, 209, 0, 0.09);
+  box-shadow: 0 0 0 1px rgba(255, 209, 0, 0.18) inset;
 }
 
-.karaoke-word {
-  display: inline;
-  margin-right: 0.3em;
-  border-radius: 3px;
-  padding: 0.05em 0.02em;
-  transition: color 0.08s ease, background-color 0.08s ease;
+.line-pair--focus .line-en {
+  color: #ffdf73;
+  text-shadow: 0 0 8px rgba(255, 209, 0, 0.12);
 }
 
-.karaoke-word--pt {
-  margin-right: 0.28em;
-}
-
-.line-pair--active .karaoke-word--active {
-  color: var(--jamaica-yellow);
-  font-weight: 700;
-  background: rgba(255, 209, 0, 0.12);
-}
-
-.line-pair--active .karaoke-word--pt.karaoke-word--active {
-  color: var(--jamaica-green);
-  background: rgba(0, 122, 61, 0.15);
+.line-pair--focus .line-pt {
+  color: #f2f2f2;
+  border-left-color: rgba(255, 209, 0, 0.7);
 }
 
 /* Lyrics Interleaved */
@@ -327,6 +352,10 @@
 .line-pair__content {
   flex: 1;
   min-width: 0;
+}
+
+.line-pair__content--seekable {
+  cursor: pointer;
 }
 
 .line-pair__controls {

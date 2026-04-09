@@ -1,10 +1,18 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { v4: uuidv4 } = require('uuid');
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const SONGS_DIR = path.join(DATA_DIR, 'songs');
 const SONGS_FILE = path.join(DATA_DIR, 'songs.json');
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'with', 'that', 'this', 'you', 'your', 'are', 'was', 'were', 'from',
+  'have', 'has', 'had', 'but', 'not', 'all', 'can', 'out', 'just', 'into', 'about', 'they',
+  'them', 'then', 'than', 'when', 'what', 'who', 'where', 'why', 'how', 'his', 'her', 'him',
+  'our', 'their', 'its', 'dont', 'cant', 'ive', 'im', 'youre', 'to', 'of', 'in', 'on', 'at',
+  'a', 'an', 'is', 'it', 'be', 'as', 'or', 'if', 'no', 'we', 'i', 'me', 'my', 'yo', 'mi',
+  'di', 'de', 'inna', 'pon', 'fi', 'dem', 'nah', 'nuh',
+]);
 
 // Converte título em nome de arquivo seguro: "Bob Marley - No Woman No Cry" → "bob-marley-no-woman-no-cry.json"
 function titleToFilename(titulo) {
@@ -29,6 +37,84 @@ function readAll() {
 function writeAll(data) {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(SONGS_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function normalizeText(value) {
+  return (value ?? '')
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9\s]/g, ' ')
+    .replaceAll(/\s+/g, ' ')
+    .trim();
+}
+
+function tokenize(value) {
+  return normalizeText(value)
+    .split(' ')
+    .filter(token => token.length >= 3 && !STOP_WORDS.has(token));
+}
+
+function songRelevanceScore(song, queryTokens) {
+  if (queryTokens.length === 0) return 0;
+
+  const titleTokens = new Set(tokenize(song.titulo ?? ''));
+  const lyricTokens = new Set(tokenize((song.letra_original ?? '').slice(0, 1500)));
+
+  let overlap = 0;
+  for (const token of queryTokens) {
+    if (titleTokens.has(token)) overlap += 3;
+    else if (lyricTokens.has(token)) overlap += 1;
+  }
+  return overlap;
+}
+
+function parseVocabOptions(options) {
+  const normalized = typeof options === 'number' ? { maxLines: options } : options;
+  return {
+    title: normalized.title ?? '',
+    originalText: normalized.originalText ?? '',
+    maxLines: normalized.maxLines ?? 18,
+    maxSongs: normalized.maxSongs ?? 4,
+    maxChars: normalized.maxChars ?? 1800,
+  };
+}
+
+function rankSongsByRelevance(songs, queryTokens, maxSongs) {
+  return songs
+    .map((song, index) => ({
+      song,
+      index,
+      score: songRelevanceScore(song, queryTokens),
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return b.index - a.index;
+    })
+    .slice(0, Math.max(1, maxSongs))
+    .map(entry => entry.song);
+}
+
+function appendPairsFromSong(song, state, maxLines, maxChars) {
+  const enLines = (song.letra_original ?? '').split('\n').filter(l => l.trim());
+  const ptLines = (song.letra_traduzida ?? '').split('\n').filter(l => l.trim());
+  const count = Math.min(enLines.length, ptLines.length);
+
+  for (let i = 0; i < count && state.pairs.length < maxLines; i++) {
+    const en = enLines[i].trim();
+    const pt = ptLines[i].trim();
+    if (!en || !pt) continue;
+
+    const pairKey = `${en.toLowerCase()}|||${pt.toLowerCase()}`;
+    if (state.seenPairs.has(pairKey)) continue;
+
+    const nextPairChars = (`  • "${en}" → "${pt}"\n`).length;
+    if (state.usedChars + nextPairChars > maxChars) return true;
+
+    state.seenPairs.add(pairKey);
+    state.usedChars += nextPairChars;
+    state.pairs.push({ en, pt });
+  }
+
+  return state.pairs.length >= maxLines || state.usedChars >= maxChars;
 }
 
 function save({ titulo, letra_original, letra_traduzida, analise_de_contexto, notas_culturais }) {
@@ -64,23 +150,26 @@ function save({ titulo, letra_original, letra_traduzida, analise_de_contexto, no
 }
 
 // Extrai pares de linhas das músicas salvas para usar como exemplos no prompt
-// Usa as últimas N músicas, limite de linhas para não estourar o contexto
-function getVocabExamples(maxLines = 25) {
+// Prioriza músicas com maior similaridade simples e limita por tamanho de contexto
+function getVocabExamples(options = {}) {
+  const { title, originalText, maxLines, maxSongs, maxChars } = parseVocabOptions(options);
+
   const songs = readAll();
   if (songs.length === 0) return [];
 
-  const pairs = [];
-  // Pega as últimas 5 músicas salvas
-  for (const song of songs.slice(-5)) {
-    const enLines = (song.letra_original ?? '').split('\n').filter(l => l.trim());
-    const ptLines = (song.letra_traduzida ?? '').split('\n').filter(l => l.trim());
-    const count = Math.min(enLines.length, ptLines.length);
-    for (let i = 0; i < count && pairs.length < maxLines; i++) {
-      pairs.push({ en: enLines[i].trim(), pt: ptLines[i].trim() });
-    }
-    if (pairs.length >= maxLines) break;
+  const queryTokens = tokenize(`${title} ${(originalText ?? '').slice(0, 1200)}`).slice(0, 100);
+  const rankedSongs = rankSongsByRelevance(songs, queryTokens, maxSongs);
+  const state = {
+    pairs: [],
+    seenPairs: new Set(),
+    usedChars: 0,
+  };
+
+  for (const song of rankedSongs) {
+    const reachedLimit = appendPairsFromSong(song, state, maxLines, maxChars);
+    if (reachedLimit) break;
   }
-  return pairs;
+  return state.pairs;
 }
 
 module.exports = { readAll, save, getVocabExamples };

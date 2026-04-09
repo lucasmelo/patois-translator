@@ -12,13 +12,13 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslationResult, NotaCultural, KaraokeWordTiming } from '../../models/translation.model';
+import { TranslationResult, NotaCultural } from '../../models/translation.model';
 import { TranslationService } from '../../services/translation.service';
 
 // Offset pequeno para o highlight não parecer atrasado.
 const KARAOKE_OFFSET = 0.18;
-const KARAOKE_SILENCE_HOLD_SECONDS = 0.3;
 type KaraokeTimestamp = { start: number; end: number } | null;
+type KaraokeGroup = { lineIndexes: number[]; start: number; end: number };
 
 @Component({
   selector: 'app-lyrics-display',
@@ -57,24 +57,6 @@ export class LyricsDisplayComponent implements AfterViewInit, OnDestroy {
     this.sourcePairs().map((pair, i) => this.edits()[i] ?? pair)
   );
 
-  /** Linhas cujo karaoke por palavra foi invalidado após edição manual. */
-  readonly karaokeInvalidated = signal<Set<number>>(new Set());
-
-  readonly effectiveKaraokeWords = computed(() => {
-    const rows = this.result().karaokeWords ?? [];
-    const bad = this.karaokeInvalidated();
-    return rows.map((row, i) => (bad.has(i) ? null : row ?? null));
-  });
-
-  readonly ptKaraokeTimings = computed(() => {
-    const pairs = this.pairedLines();
-    const ts = this.result().lineTimestamps ?? [];
-    const enKw = this.effectiveKaraokeWords();
-    return pairs.map((pair, i) =>
-      this.buildPtKaraokeTokens(pair.pt, ts[i] ?? null, enKw[i] ?? null),
-    );
-  });
-
   // ── Karaoke ────────────────────────────────────────────────────
   @ViewChild('audioEl') audioEl!: ElementRef<HTMLAudioElement>;
   @ViewChild('playerEl') playerEl!: ElementRef<HTMLElement>;
@@ -87,6 +69,7 @@ export class LyricsDisplayComponent implements AfterViewInit, OnDestroy {
 
   private observer: IntersectionObserver | null = null;
   private animationFrameId: number | null = null;
+  private lastAutoScrolledGroup = -1;
 
   audioUrl = computed(() => {
     const id = this.result().audioId;
@@ -95,61 +78,130 @@ export class LyricsDisplayComponent implements AfterViewInit, OnDestroy {
 
   hasAudio = computed(() => !!this.audioUrl());
 
-  private getFirstTimestamp(timestamps: KaraokeTimestamp[]): Exclude<KaraokeTimestamp, null> | null {
-    return timestamps.find((ts): ts is Exclude<KaraokeTimestamp, null> => !!ts) ?? null;
+  private isValidTimestamp(ts: KaraokeTimestamp): ts is Exclude<KaraokeTimestamp, null> {
+    return !!ts && Number.isFinite(ts.start) && Number.isFinite(ts.end) && ts.end > ts.start;
   }
 
-  private getAdjustedKaraokeTime(timestamps: KaraokeTimestamp[]): number {
+  private getAdjustedKaraokeTime(): number {
     const current = this.currentTime();
-    const firstTimestamp = this.getFirstTimestamp(timestamps);
-
-    // Nunca antecipa o highlight antes da primeira voz.
-    if (!firstTimestamp || current < firstTimestamp.start) return current;
-
     return Math.max(0, current - KARAOKE_OFFSET);
   }
 
-  private findActiveIndexAtTime(t: number, timestamps: KaraokeTimestamp[]): number {
+  private getStableLineStarts(timestamps: KaraokeTimestamp[]): Array<{ index: number; start: number }> {
+    const starts: Array<{ index: number; start: number }> = [];
+    let lastStart = -1;
+
     for (let i = 0; i < timestamps.length; i++) {
       const ts = timestamps[i];
-      if (!ts) continue;
-      if (t >= ts.start && t < ts.end) return i;
-      if (t < ts.start) break;
+      if (!this.isValidTimestamp(ts)) continue;
+      const start = Math.max(ts.start, lastStart + 0.001);
+      starts.push({ index: i, start });
+      lastStart = start;
     }
-    return -1;
+
+    return starts;
   }
 
-  private findPreviousLineIndex(t: number, timestamps: KaraokeTimestamp[]): number {
-    let previousIdx = -1;
-    for (let i = 0; i < timestamps.length; i++) {
-      const ts = timestamps[i];
-      if (!ts) continue;
-      if (t >= ts.end) previousIdx = i;
-      if (t < ts.start) break;
-    }
-    return previousIdx;
+  private getLineDuration(index: number, timestamps: KaraokeTimestamp[]): number {
+    const ts = timestamps[index];
+    if (!this.isValidTimestamp(ts)) return 0;
+    return Math.max(0.05, ts.end - ts.start);
   }
 
-  private shouldHoldPreviousLine(
-    t: number,
-    previousIdx: number,
+  private getLineTextForGrouping(index: number): string {
+    return (this.pairedLines()[index]?.en ?? '').trim();
+  }
+
+  private isShortLineForGrouping(index: number): boolean {
+    const text = this.getLineTextForGrouping(index);
+    return text.length > 0 && text.length <= 16;
+  }
+
+  private shouldMergeIntoCurrentGroup(
+    currentLastLineIndex: number,
+    nextLineIndex: number,
     timestamps: KaraokeTimestamp[],
+    currentGroupSize: number,
   ): boolean {
-    if (previousIdx < 0) return false;
+    if (currentGroupSize >= 3) return false;
 
-    const prev = timestamps[previousIdx];
-    if (!prev) return false;
+    const prevTs = timestamps[currentLastLineIndex];
+    const nextTs = timestamps[nextLineIndex];
+    if (!this.isValidTimestamp(prevTs) || !this.isValidTimestamp(nextTs)) return false;
 
-    const next = timestamps
-      .slice(previousIdx + 1)
-      .find((ts): ts is Exclude<KaraokeTimestamp, null> => !!ts);
+    const gap = nextTs.start - prevTs.end;
+    const prevDuration = this.getLineDuration(currentLastLineIndex, timestamps);
+    const nextDuration = this.getLineDuration(nextLineIndex, timestamps);
+    const prevShort = this.isShortLineForGrouping(currentLastLineIndex);
+    const nextShort = this.isShortLineForGrouping(nextLineIndex);
 
-    const holdUntil = Math.min(
-      prev.end + KARAOKE_SILENCE_HOLD_SECONDS,
-      next ? next.start : Number.POSITIVE_INFINITY,
+    if (gap > 1.25) return false;
+
+    return (
+      gap <= 0.48 ||
+      prevDuration <= 1.15 ||
+      nextDuration <= 1 ||
+      prevShort ||
+      nextShort
     );
+  }
 
-    return t < holdUntil;
+  private buildKaraokeGroups(timestamps: KaraokeTimestamp[]): KaraokeGroup[] {
+    const starts = this.getStableLineStarts(timestamps);
+    if (starts.length === 0) return [];
+
+    const groups: KaraokeGroup[] = [];
+    let currentLineIndexes: number[] = [starts[0].index];
+
+    for (let i = 1; i < starts.length; i++) {
+      const nextLineIndex = starts[i].index;
+      const currentLastLineIndex = currentLineIndexes.at(-1) ?? starts[i - 1].index;
+      const shouldMerge = this.shouldMergeIntoCurrentGroup(
+        currentLastLineIndex,
+        nextLineIndex,
+        timestamps,
+        currentLineIndexes.length,
+      );
+
+      if (shouldMerge) {
+        currentLineIndexes.push(nextLineIndex);
+        continue;
+      }
+
+      const firstTs = timestamps[currentLineIndexes[0]];
+      const lastTs = timestamps[currentLineIndexes.at(-1) ?? currentLineIndexes[0]];
+      groups.push({
+        lineIndexes: [...currentLineIndexes],
+        start: this.isValidTimestamp(firstTs) ? firstTs.start : starts[i - 1].start,
+        end: this.isValidTimestamp(lastTs) ? lastTs.end : starts[i - 1].start + 0.7,
+      });
+      currentLineIndexes = [nextLineIndex];
+    }
+
+    const firstTs = timestamps[currentLineIndexes[0]];
+    const lastTs = timestamps[currentLineIndexes.at(-1) ?? currentLineIndexes[0]];
+    groups.push({
+      lineIndexes: [...currentLineIndexes],
+      start: this.isValidTimestamp(firstTs) ? firstTs.start : starts.at(-1)?.start ?? 0,
+      end: this.isValidTimestamp(lastTs) ? lastTs.end : (starts.at(-1)?.start ?? 0) + 0.7,
+    });
+
+    return groups;
+  }
+
+  private findActiveGroupIndex(t: number, groups: KaraokeGroup[]): number {
+    if (groups.length === 0) return -1;
+    if (t < groups[0].start) return -1;
+
+    let active = 0;
+    for (let i = 1; i < groups.length; i++) {
+      if (t >= groups[i].start) {
+        active = i;
+        continue;
+      }
+      break;
+    }
+    return active;
   }
 
   private syncCurrentTimeFromAudio(): void {
@@ -193,21 +245,38 @@ export class LyricsDisplayComponent implements AfterViewInit, OnDestroy {
     if (syncToAudio) this.syncCurrentTimeFromAudio();
   }
 
-  activeLineIndex = computed(() => {
+  karaokeGroups = computed(() => {
     const timestamps = this.result().lineTimestamps ?? [];
-    if (timestamps.length === 0) return -1;
+    return this.buildKaraokeGroups(timestamps);
+  });
 
-    const firstTimestamp = this.getFirstTimestamp(timestamps);
-    if (firstTimestamp && this.currentTime() < firstTimestamp.start) return -1;
+  activeGroupIndex = computed(() => {
+    const groups = this.karaokeGroups();
+    if (groups.length === 0) return -1;
+    const t = this.getAdjustedKaraokeTime();
+    return this.findActiveGroupIndex(t, groups);
+  });
 
-    const t = this.getAdjustedKaraokeTime(timestamps);
-    const activeIdx = this.findActiveIndexAtTime(t, timestamps);
-    if (activeIdx >= 0) return activeIdx;
+  currentGroupLineSet = computed(() => {
+    const groupIdx = this.activeGroupIndex();
+    const groups = this.karaokeGroups();
+    if (groupIdx < 0 || groupIdx >= groups.length) return new Set<number>();
+    return new Set(groups[groupIdx].lineIndexes);
+  });
 
-    const previousIdx = this.findPreviousLineIndex(t, timestamps);
-    if (this.shouldHoldPreviousLine(t, previousIdx, timestamps)) return previousIdx;
+  // Janela visual: grupo atual + 1 anterior + 2 próximos.
+  karaokeWindowLineSet = computed(() => {
+    const groups = this.karaokeGroups();
+    const groupIdx = this.activeGroupIndex();
+    if (groupIdx < 0 || groupIdx >= groups.length) return new Set<number>();
 
-    return -1;
+    const from = Math.max(0, groupIdx - 1);
+    const to = Math.min(groups.length - 1, groupIdx + 2);
+    const indexes = new Set<number>();
+    for (let i = from; i <= to; i++) {
+      for (const lineIndex of groups[i].lineIndexes) indexes.add(lineIndex);
+    }
+    return indexes;
   });
 
   formattedTime = computed(() => {
@@ -236,16 +305,22 @@ export class LyricsDisplayComponent implements AfterViewInit, OnDestroy {
       this.savedIndices.set(new Set());
       this.songSaveState.set('idle');
       this.correctionError.set(null);
-      this.karaokeInvalidated.set(new Set());
       this.stopPlaybackTracking();
+      this.lastAutoScrolledGroup = -1;
     });
 
-    // Auto-scroll para a linha ativa
+    // Auto-scroll para o grupo ativo (evita jitter em linhas muito rápidas).
     effect(() => {
-      const idx = this.activeLineIndex();
-      if (idx < 0) return;
+      const groupIdx = this.activeGroupIndex();
+      if (groupIdx < 0) return;
+      if (groupIdx === this.lastAutoScrolledGroup) return;
+      this.lastAutoScrolledGroup = groupIdx;
+
+      const groups = this.karaokeGroups();
+      const anchorLine = groups[groupIdx]?.lineIndexes[0];
+      if (anchorLine === undefined) return;
       setTimeout(() => {
-        document.getElementById(`lyric-line-${idx}`)?.scrollIntoView({
+        document.getElementById(`lyric-line-${anchorLine}`)?.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
         });
@@ -302,11 +377,24 @@ export class LyricsDisplayComponent implements AfterViewInit, OnDestroy {
     if (this.isPlaying()) { el.pause(); } else { el.play(); }
   }
 
+  seekBySeconds(deltaSeconds: number): void {
+    const el = this.audioEl?.nativeElement;
+    if (!el) return;
+    const duration = Number.isFinite(el.duration) ? el.duration : this.audioDuration();
+    const targetTime = Math.max(0, Math.min(el.currentTime + deltaSeconds, duration || 0));
+    el.currentTime = targetTime;
+    this.currentTime.set(targetTime);
+  }
+
   seekToValue(event: Event): void {
     const el = this.audioEl?.nativeElement;
     if (!el) return;
-    el.currentTime = Number.parseFloat((event.target as HTMLInputElement).value);
-    this.currentTime.set(el.currentTime);
+    const target = Number.parseFloat((event.target as HTMLInputElement).value);
+    if (!Number.isFinite(target)) return;
+    const duration = Number.isFinite(el.duration) ? el.duration : this.audioDuration();
+    const clamped = Math.max(0, Math.min(target, duration || 0));
+    el.currentTime = clamped;
+    this.currentTime.set(clamped);
   }
 
   // ── Edição ─────────────────────────────────────────────────────
@@ -325,74 +413,27 @@ export class LyricsDisplayComponent implements AfterViewInit, OnDestroy {
 
   confirmEdit(index: number): void {
     this.edits.update(prev => ({ ...prev, [index]: { en: this.editEn().trim(), pt: this.editPt().trim() } }));
-    this.karaokeInvalidated.update(prev => new Set([...prev, index]));
     this.editingIndex.set(null);
   }
 
-  showWordLevelKaraoke(lineIndex: number): boolean {
-    return (
-      this.hasAudio() &&
-      this.activeLineIndex() === lineIndex &&
-      (this.effectiveKaraokeWords()[lineIndex]?.length ?? 0) > 0
-    );
+  hasLineTimestamp(index: number): boolean {
+    return !!(this.result().lineTimestamps ?? [])[index];
   }
 
-  isEnWordActive(lineIndex: number, wordIndex: number): boolean {
-    if (this.activeLineIndex() !== lineIndex) return false;
-    const t = this.getAdjustedKaraokeTime(this.result().lineTimestamps ?? []);
-    const words = this.effectiveKaraokeWords()[lineIndex];
-    const w = words?.[wordIndex];
-    if (!w) return false;
-    const last = (words?.length ?? 0) - 1;
-    if (wordIndex === last) return t >= w.start && t <= w.end + 0.08;
-    return t >= w.start && t < w.end;
+  isLineInCurrentGroup(index: number): boolean {
+    return this.currentGroupLineSet().has(index);
   }
 
-  isPtWordActive(lineIndex: number, wordIndex: number): boolean {
-    if (this.activeLineIndex() !== lineIndex) return false;
-    const t = this.getAdjustedKaraokeTime(this.result().lineTimestamps ?? []);
-    const words = this.ptKaraokeTimings()[lineIndex];
-    const w = words?.[wordIndex];
-    if (!w) return false;
-    const last = (words?.length ?? 0) - 1;
-    if (wordIndex === last) return t >= w.start && t <= w.end + 0.08;
-    return t >= w.start && t < w.end;
+  isLineInKaraokeWindow(index: number): boolean {
+    return this.karaokeWindowLineSet().has(index);
   }
 
-  private buildPtKaraokeTokens(
-    ptLine: string,
-    ts: { start: number; end: number } | null,
-    enWords: KaraokeWordTiming[] | null,
-  ): KaraokeWordTiming[] {
-    const tokens = this.tokenizeKaraokeLine(ptLine);
-    if (tokens.length === 0 || !ts || ts.end <= ts.start) return [];
-    const t0 = ts.start;
-    const t1 = ts.end;
-    const dur = Math.max(0.05, t1 - t0);
-
-    if (enWords && enWords.length === tokens.length) {
-      return tokens.map((text, i) => ({
-        text,
-        start: enWords[i].start,
-        end: enWords[i].end,
-      }));
-    }
-
-    const n = tokens.length;
-    return tokens.map((text, i) => ({
-      text,
-      start: t0 + (i / n) * dur,
-      end: t0 + ((i + 1) / n) * dur,
-    }));
-  }
-
-  private tokenizeKaraokeLine(line: string): string[] {
-    const base = line
-      .trim()
-      .replace(/\s*\(\d+x\)\s*$/i, '')
-      .trim();
-    if (!base) return [];
-    return base.split(/\s+/).filter(Boolean);
+  seekToLine(index: number): void {
+    const el = this.audioEl?.nativeElement;
+    const ts = (this.result().lineTimestamps ?? [])[index];
+    if (!el || !ts) return;
+    el.currentTime = ts.start;
+    this.currentTime.set(ts.start);
   }
 
   saveCorrection(index: number): void {

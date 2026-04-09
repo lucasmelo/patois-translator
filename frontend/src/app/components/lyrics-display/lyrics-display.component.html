@@ -64,6 +64,15 @@
   <div class="mini-player" [class.mini-player--visible]="miniPlayerVisible()">
     <div class="mini-player__inner">
       <button
+        class="mini-player__skip"
+        (click)="seekBySeconds(-10)"
+        aria-label="Voltar 10 segundos"
+        title="Voltar 10s"
+      >
+        -10s
+      </button>
+
+      <button
         class="mini-player__btn"
         (click)="togglePlay()"
         [attr.aria-label]="isPlaying() ? 'Pausar' : 'Tocar'"
@@ -80,9 +89,26 @@
         }
       </button>
 
-      <div class="mini-player__track">
-        <div class="mini-player__fill" [style.width.%]="progressPercent()"></div>
-      </div>
+      <input
+        class="mini-player__scrubber"
+        type="range"
+        min="0"
+        [max]="audioDuration()"
+        step="0.1"
+        [value]="currentTime()"
+        [style.--fill]="progressPercent() + '%'"
+        (input)="seekToValue($event)"
+        aria-label="Progresso da música no player flutuante"
+      />
+
+      <button
+        class="mini-player__skip"
+        (click)="seekBySeconds(10)"
+        aria-label="Adiantar 10 segundos"
+        title="Adiantar 10s"
+      >
+        +10s
+      </button>
 
       <span class="mini-player__time">{{ formattedTime() }}</span>
     </div>
@@ -133,34 +159,19 @@
             class="line-pair"
             [id]="'lyric-line-' + lineIdx"
             [class.line-pair--edited]="isEdited(lineIdx)"
-            [class.line-pair--active]="activeLineIndex() === lineIdx"
+            [class.line-pair--active]="isLineInKaraokeWindow(lineIdx)"
+            [class.line-pair--focus]="isLineInCurrentGroup(lineIdx)"
           >
-            <div class="line-pair__content">
-              @if (showWordLevelKaraoke(lineIdx)) {
-                <p class="line-en line-en--karaoke">
-                  @for (w of effectiveKaraokeWords()[lineIdx]!; track wi; let wi = $index) {
-                    <span
-                      class="karaoke-word"
-                      [class.karaoke-word--active]="isEnWordActive(lineIdx, wi)"
-                    >{{ w.text }}</span>
-                  }
-                </p>
-                @if (ptKaraokeTimings()[lineIdx].length > 0) {
-                  <p class="line-pt line-pt--karaoke">
-                    @for (w of ptKaraokeTimings()[lineIdx]; track wpi; let wpi = $index) {
-                      <span
-                        class="karaoke-word karaoke-word--pt"
-                        [class.karaoke-word--active]="isPtWordActive(lineIdx, wpi)"
-                      >{{ w.text }}</span>
-                    }
-                  </p>
-                } @else {
-                  <p class="line-pt">{{ pair.pt }}</p>
-                }
-              } @else {
-                <p class="line-en">{{ pair.en }}</p>
-                <p class="line-pt">{{ pair.pt }}</p>
-              }
+            <div
+              class="line-pair__content"
+              [class.line-pair__content--seekable]="hasAudio() && hasLineTimestamp(lineIdx)"
+              (click)="seekToLine(lineIdx)"
+              [attr.role]="hasAudio() && hasLineTimestamp(lineIdx) ? 'button' : null"
+              [attr.tabindex]="hasAudio() && hasLineTimestamp(lineIdx) ? 0 : null"
+              (keyup.enter)="seekToLine(lineIdx)"
+            >
+              <p class="line-en">{{ pair.en }}</p>
+              <p class="line-pt">{{ pair.pt }}</p>
             </div>
             <div class="line-pair__controls">
               <button class="line-btn line-btn--edit" (click)="startEdit(lineIdx)" title="Editar esta linha">✏️</button>

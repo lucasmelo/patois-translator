@@ -91,10 +91,10 @@ function createWhisperCopy(inputPath) {
   return outputPath;
 }
 
-// Baixa M4A nativo do YouTube (sem reencoding quando possível) para o player.
-// Retorna { playerPath, whisperPath }:
-//   playerPath  — M4A de qualidade máxima, servido ao player do browser
-//   whisperPath — WAV 16kHz mono derivado via ffmpeg, enviado ao Groq Whisper e deletado após
+// Baixa M4A nativo do YouTube (sem reencoding quando possível) para o player/transcrição.
+// Retorna { playerPath }:
+//   playerPath — M4A de qualidade máxima, servido ao player do browser.
+// Fallback para WAV 16kHz é aplicado na rota apenas quando a transcrição falha/parece fraca.
 async function downloadAudio(url) {
   url = normalizeYoutubeUrl(url);
 
@@ -114,10 +114,7 @@ async function downloadAudio(url) {
     throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp e ffmpeg estão instalados no PATH.');
   }
 
-  // Cria cópia 16kHz mono WAV exclusivamente para o Whisper
-  const whisperPath = createWhisperCopy(playerPath);
-
-  return { playerPath, whisperPath };
+  return { playerPath };
 }
 
 async function deleteFile(filePath) {

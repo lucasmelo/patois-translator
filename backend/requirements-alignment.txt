@@ -1,3 +1,0 @@
-whisperx
-torch
-torchaudio

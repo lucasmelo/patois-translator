@@ -8,6 +8,9 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const GAP_THRESHOLD_SECONDS = 8;
 const LATE_START_THRESHOLD = 5;
+const LOW_CONFIDENCE_MIN_WORDS = 8;
+const LOW_CONFIDENCE_MIN_TEXT_CHARS = 24;
+const LOW_CONFIDENCE_LATE_START_SECONDS = 14;
 
 function isFFmpegAvailable() {
   try {
@@ -163,4 +166,21 @@ async function transcribe(filePath) {
   return { text, segments, words };
 }
 
-module.exports = { transcribe };
+function isTranscriptionSuspicious(result) {
+  const text = String(result?.text ?? '').trim();
+  const segments = Array.isArray(result?.segments) ? result.segments : [];
+  const words = Array.isArray(result?.words) ? result.words : [];
+
+  if (!text) return true;
+  if (segments.length === 0 && words.length < LOW_CONFIDENCE_MIN_WORDS) return true;
+  if (text.length < LOW_CONFIDENCE_MIN_TEXT_CHARS && words.length < LOW_CONFIDENCE_MIN_WORDS) return true;
+
+  const firstSegmentStart = segments[0]?.start ?? Number.POSITIVE_INFINITY;
+  const firstWordStart = words[0]?.start ?? Number.POSITIVE_INFINITY;
+  const firstStart = Math.min(firstSegmentStart, firstWordStart);
+  if (Number.isFinite(firstStart) && firstStart > LOW_CONFIDENCE_LATE_START_SECONDS) return true;
+
+  return false;
+}
+
+module.exports = { transcribe, isTranscriptionSuspicious };

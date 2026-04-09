@@ -1,8 +1,3 @@
-// Normaliza linha para comparação (ignora maiúsculas, espaços extras, pontuação final)
-function normalizeLine(line) {
-  return line.toLowerCase().trim().replace(/[.,!?]+$/, '');
-}
-
 function normalizeToken(token) {
   return String(token ?? '')
     .toLowerCase()
@@ -31,11 +26,8 @@ function isVocalizationToken(token) {
 function getLineWeight(line) {
   const trimmed = line.trim();
   if (!trimmed) return 0;
-
-  const repeatMatch = trimmed.match(/\((\d+)x\)\s*$/);
-  const repeatCount = repeatMatch ? Number.parseInt(repeatMatch[1], 10) : 1;
   const textWeight = trimmed.replaceAll(/\s+/g, '').length;
-  return Math.max(1, Math.round(textWeight * Math.pow(repeatCount, 0.65)));
+  return Math.max(1, textWeight);
 }
 
 function getWordWeight(word) {
@@ -144,6 +136,122 @@ function alignLineArrayToWords(lines, usableWords) {
   }
 
   return result;
+}
+
+function isFiniteTimestamp(ts) {
+  return !!ts && Number.isFinite(ts.start) && Number.isFinite(ts.end) && ts.end > ts.start;
+}
+
+function findPrevTimedIndex(lines, rows, index) {
+  for (let i = index - 1; i >= 0; i--) {
+    if (!lines[i].trim()) continue;
+    if (isFiniteTimestamp(rows[i])) return i;
+  }
+  return -1;
+}
+
+function findNextTimedIndex(lines, rows, index) {
+  for (let i = index + 1; i < rows.length; i++) {
+    if (!lines[i].trim()) continue;
+    if (isFiniteTimestamp(rows[i])) return i;
+  }
+  return -1;
+}
+
+function smoothLineTimestamps(lines, lineTimestamps, segments = []) {
+  const MIN_LINE_DURATION_SECONDS = 0.11;
+  const MAX_BRIDGEABLE_GAP_SECONDS = 2.4;
+  const SEGMENT_END_FALLBACK = segments.at(-1)?.end ?? null;
+
+  const out = [...lineTimestamps];
+
+  // 1) Preenche linhas de texto que vieram sem timestamp válido.
+  for (let i = 0; i < out.length; i++) {
+    if (!lines[i]?.trim()) {
+      out[i] = null;
+      continue;
+    }
+    if (isFiniteTimestamp(out[i])) continue;
+
+    const prevIdx = findPrevTimedIndex(lines, out, i);
+    const nextIdx = findNextTimedIndex(lines, out, i);
+
+    if (prevIdx >= 0 && nextIdx >= 0) {
+      const prev = out[prevIdx];
+      const next = out[nextIdx];
+      const slots = nextIdx - prevIdx;
+      const start = prev.end + ((next.start - prev.end) * (i - prevIdx - 0.2)) / slots;
+      const end = prev.end + ((next.start - prev.end) * (i - prevIdx + 0.8)) / slots;
+      out[i] = { start, end };
+      continue;
+    }
+
+    if (prevIdx >= 0) {
+      const prev = out[prevIdx];
+      out[i] = { start: prev.end, end: prev.end + 0.28 };
+      continue;
+    }
+
+    if (nextIdx >= 0) {
+      const next = out[nextIdx];
+      out[i] = { start: Math.max(0, next.start - 0.28), end: next.start };
+      continue;
+    }
+
+    if (Number.isFinite(SEGMENT_END_FALLBACK) && SEGMENT_END_FALLBACK > 0) {
+      out[i] = { start: 0, end: SEGMENT_END_FALLBACK };
+    } else {
+      out[i] = { start: 0, end: 0.4 };
+    }
+  }
+
+  // 2) Corrige overlaps e encurta lacunas exageradas entre linhas consecutivas.
+  let prevTimedIdx = -1;
+  for (let i = 0; i < out.length; i++) {
+    if (!lines[i]?.trim()) continue;
+    const cur = out[i];
+    if (!isFiniteTimestamp(cur)) continue;
+
+    if (prevTimedIdx >= 0) {
+      const prev = out[prevTimedIdx];
+      const overlap = prev.end - cur.start;
+      if (overlap > 0) {
+        const shift = overlap / 2;
+        prev.end -= shift;
+        cur.start += shift;
+      }
+
+      const gap = cur.start - prev.end;
+      if (gap > 0.6 && gap <= MAX_BRIDGEABLE_GAP_SECONDS) {
+        const bridge = Math.min(gap * 0.6, 0.55);
+        prev.end += bridge * 0.5;
+        cur.start -= bridge * 0.5;
+      }
+    }
+
+    prevTimedIdx = i;
+  }
+
+  // 3) Garante duração mínima e ordem crescente.
+  let cursor = 0;
+  for (let i = 0; i < out.length; i++) {
+    if (!lines[i]?.trim()) continue;
+    const cur = out[i];
+    if (!isFiniteTimestamp(cur)) {
+      out[i] = { start: cursor, end: cursor + MIN_LINE_DURATION_SECONDS };
+      cursor += MIN_LINE_DURATION_SECONDS;
+      continue;
+    }
+
+    if (cur.start < cursor) cur.start = cursor;
+    if (cur.end <= cur.start) cur.end = cur.start + MIN_LINE_DURATION_SECONDS;
+    if (cur.end - cur.start < MIN_LINE_DURATION_SECONDS) {
+      cur.end = cur.start + MIN_LINE_DURATION_SECONDS;
+    }
+    cursor = cur.end;
+  }
+
+  return out;
 }
 
 function buildStanzas(lines) {
@@ -269,55 +377,6 @@ function alignLinesToWords(letteraOriginal, words) {
   return alignLineArrayToWords(lines, usableWords);
 }
 
-// Colapsa linhas consecutivas repetidas adicionando (2x), (3x) etc.
-// Processa EN e PT juntos para manter o mesmo número de linhas (necessário para display interleaved)
-function collapseRepeats(result) {
-  const enLines = (result.letra_original ?? '').split('\n');
-  const ptLines = (result.letra_traduzida ?? '').split('\n');
-
-  const outEn = [];
-  const outPt = [];
-
-  let i = 0;
-  while (i < enLines.length) {
-    const en = enLines[i] ?? '';
-    const pt = ptLines[i] ?? '';
-
-    // Linha vazia = separador de estrofe — nunca colapsar
-    if (!en.trim()) {
-      outEn.push(en);
-      outPt.push(pt);
-      i++;
-      continue;
-    }
-
-    // Conta quantas vezes esta linha EN se repete consecutivamente
-    let count = 1;
-    while (
-      i + count < enLines.length &&
-      normalizeLine(enLines[i + count]) === normalizeLine(en)
-    ) {
-      count++;
-    }
-
-    if (count >= 2) {
-      outEn.push(`${en} (${count}x)`);
-      outPt.push(pt ? `${pt} (${count}x)` : pt);
-      i += count;
-    } else {
-      outEn.push(en);
-      outPt.push(pt);
-      i++;
-    }
-  }
-
-  return {
-    ...result,
-    letra_original: outEn.join('\n'),
-    letra_traduzida: outPt.join('\n'),
-  };
-}
-
 // Alinha cada linha da letra_original aos segmentos do Whisper.
 //
 // Estratégia: distribui as linhas pelo TEMPO DE FALA REAL (soma das durações dos
@@ -326,20 +385,20 @@ function collapseRepeats(result) {
 //
 // Retorna Array<{ start, end } | null> — null para linhas vazias (separadores de estrofe).
 function alignLinesToSegments(letteraOriginal, segments, words = []) {
+  const lines = letteraOriginal.split('\n');
+
   const wordAligned = alignLinesToWords(letteraOriginal, words);
-  if (wordAligned.length > 0) return wordAligned;
+  if (wordAligned.length > 0) {
+    return smoothLineTimestamps(lines, wordAligned, segments);
+  }
 
   if (!segments || segments.length === 0) return [];
 
-  const lines = letteraOriginal.split('\n');
-  // Peso de cada linha por chars — (Nx) recebe fator amortecido pois o cantor repete
+  // Peso de cada linha por chars (sem tratamento especial de "(Nx)").
   const charCounts = lines.map(l => {
     const trimmed = l.trim();
     if (!trimmed) return 0;
-    const match = trimmed.match(/\((\d+)x\)\s*$/);
-    const n = match ? Number.parseInt(match[1], 10) : 1;
-    const weight = Math.pow(n, 0.65); // 2x→×1.57, 3x→×2.09, 4x→×2.57
-    return Math.round(trimmed.length * weight);
+    return trimmed.length;
   });
   const totalLyricChars = charCounts.reduce((s, c) => s + c, 0);
   if (totalLyricChars === 0) return lines.map(() => null);
@@ -383,7 +442,7 @@ function alignLinesToSegments(letteraOriginal, segments, words = []) {
     });
   }
 
-  return result;
+  return smoothLineTimestamps(lines, result, segments);
 }
 
-module.exports = { collapseRepeats, alignLinesToSegments };
+module.exports = { alignLinesToSegments };

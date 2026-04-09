@@ -7,9 +7,7 @@ const transcriptionService = require('../services/transcriptionService');
 const translationService = require('../services/translationService');
 const correctionsService = require('../services/correctionsService');
 const audioStore = require('../services/audioStore');
-const forcedAlignmentService = require('../services/forcedAlignmentService');
-const { collapseRepeats, alignLinesToSegments } = require('../services/lyricsUtils');
-const { buildKaraokeWordTimestamps, mergeWhisperxLineWords } = require('../services/karaokeWordAlign');
+const { alignLinesToSegments } = require('../services/lyricsUtils');
 
 const TEMP_DIR = path.join(__dirname, '../../temp');
 const { v4: uuidv4 } = require('uuid');
@@ -43,49 +41,51 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   const title = path.basename(file.originalname, path.extname(file.originalname));
   const playerPath = file.path; // original do usuário — vai pro player
   let whisperPath = null;
+  let transcriptionAudioPath = playerPath;
 
   try {
     console.log(`[1/3] Arquivo recebido: "${file.originalname}" (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-    // Cria cópia 16kHz mono só para o Whisper (original fica intacto para o player)
-    console.log(`[2/3] Criando cópia Whisper 16kHz + transcrevendo...`);
-    whisperPath = audioService.createWhisperCopy(playerPath);
-    const { text: originalText, segments, words } = await transcriptionService.transcribe(whisperPath);
+    console.log(`[2/3] Transcrevendo áudio original...`);
+    let originalText;
+    let segments;
+    let words;
+    try {
+      ({ text: originalText, segments, words } = await transcriptionService.transcribe(playerPath));
+      if (transcriptionService.isTranscriptionSuspicious({ text: originalText, segments, words })) {
+        console.warn('[2/3] Transcrição com áudio original parece fraca — fallback para WAV 16kHz');
+        whisperPath = audioService.createWhisperCopy(playerPath);
+        ({ text: originalText, segments, words } = await transcriptionService.transcribe(whisperPath));
+        transcriptionAudioPath = whisperPath;
+      }
+    } catch (err) {
+      console.warn(`[2/3] Falha na transcrição com áudio original (${err.message}) — fallback para WAV 16kHz`);
+      whisperPath = audioService.createWhisperCopy(playerPath);
+      ({ text: originalText, segments, words } = await transcriptionService.transcribe(whisperPath));
+      transcriptionAudioPath = whisperPath;
+    }
     console.log(`[2/3] Transcrição OK → ${originalText.length} chars, ${segments.length} segmentos`);
 
-    const corrections = correctionsService.findForSong(title);
-    const correctionsForPrompt = corrections.filter(c => c.titulo);
+    const correctionsForPrompt = correctionsService.getPromptCorrections({
+      titulo: title,
+      originalText,
+    });
+    if (correctionsForPrompt.length > 0) {
+      console.log(`[3/3] Memória ativa: ${correctionsForPrompt.length} correção(ões) enviada(s) ao prompt`);
+    }
     console.log(`[3/3] Iniciando tradução cultural...`);
     const translationResult = await translationService.translate(title, originalText, correctionsForPrompt);
     console.log(`[3/3] Tradução OK → notas culturais: ${translationResult.notas_culturais?.length ?? 0}`);
 
-    const corrected = correctionsService.applyToResult(translationResult, title);
-    const finalResult = collapseRepeats(corrected);
+    const finalResult = correctionsService.applyToResult(translationResult, title);
 
-    const coarseLineTimestamps = alignLinesToSegments(finalResult.letra_original, segments, words);
-    const forced = whisperPath
-      ? await forcedAlignmentService.alignLineTimestamps(
-        whisperPath,
-        finalResult.letra_original,
-        coarseLineTimestamps,
-        'en',
-      )
-      : null;
-    const lineTimestamps = forced?.lineTimestamps ?? coarseLineTimestamps;
-    let karaokeWords = buildKaraokeWordTimestamps(
-      finalResult.letra_original,
-      words,
-      lineTimestamps,
-    );
-    if (forced?.lineWords?.length) {
-      karaokeWords = mergeWhisperxLineWords(karaokeWords, forced.lineWords);
-    }
+    const lineTimestamps = alignLinesToSegments(finalResult.letra_original, segments, words);
     const audioId = path.basename(playerPath, path.extname(playerPath));
     audioStore.register(audioId, playerPath);
     // playerPath agora é gerenciado pelo store — não deletar no finally
 
     console.log(`[OK] audioId registrado: ${audioId} (expira em 10 min)`);
-    return res.json({ ...finalResult, titulo: title, audioId, lineTimestamps, karaokeWords });
+    return res.json({ ...finalResult, titulo: title, audioId, lineTimestamps });
 
   } catch (err) {
     console.error('[ERRO] Upload pipeline falhou:', err.message);

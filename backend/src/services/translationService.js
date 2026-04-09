@@ -6,14 +6,28 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Claude Sonnet: melhor qualidade para tradução cultural criativa
 const MODEL_NAME = 'claude-sonnet-4-6';
+const toPositiveInt = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+const VOCAB_MAX_LINES = toPositiveInt(process.env.TRANSLATION_VOCAB_MAX_LINES, 18);
+const VOCAB_MAX_SONGS = toPositiveInt(process.env.TRANSLATION_VOCAB_MAX_SONGS, 4);
+const VOCAB_MAX_CHARS = toPositiveInt(process.env.TRANSLATION_VOCAB_MAX_CHARS, 1800);
 
 async function translate(title, originalText, corrections = []) {
   // Exemplos de traduções validadas pelo usuário para enriquecer o estilo
   let vocabBlock = '';
-  const examples = songsService.getVocabExamples();
+  const examples = songsService.getVocabExamples({
+    title,
+    originalText,
+    maxLines: VOCAB_MAX_LINES,
+    maxSongs: VOCAB_MAX_SONGS,
+    maxChars: VOCAB_MAX_CHARS,
+  });
   if (examples.length > 0) {
     const lines = examples.map(e => `  • "${e.en}" → "${e.pt}"`).join('\n');
     vocabBlock = `\n\n📚 EXEMPLOS DE TRADUÇÕES VALIDADAS PELO USUÁRIO (use como referência de estilo e vocabulário):\n${lines}`;
+    console.log(`[Prompt] exemplos de vocabulário: ${examples.length} linha(s)`);
   }
 
   let correctionsBlock = '';
@@ -21,7 +35,7 @@ async function translate(title, originalText, corrections = []) {
     const lines = corrections
       .map(c => `  • Original: "${c.linha_en_original}" → EN corrigido: "${c.linha_en_corrigida}" | PT corrigido: "${c.linha_pt_corrigida}"`)
       .join('\n');
-    correctionsBlock = `\n\n✅ CORREÇÕES HUMANAS VALIDADAS PARA ESTA MÚSICA (aplique exatamente — um humano revisou e corrigiu estas linhas):
+    correctionsBlock = `\n\n✅ CORREÇÕES HUMANAS VALIDADAS (mais relevantes para esta tradução; aplique exatamente quando houver correspondência):
 ${lines}
 Ao encontrar estas linhas ou variações próximas, use as versões corrigidas acima.`;
   }
