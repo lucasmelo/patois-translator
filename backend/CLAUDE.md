@@ -120,6 +120,36 @@ O LLM DEVE reconstruir quebras de linha poéticas a partir do bloco contínuo do
 
 Se a IA não gerar \n, o display interleaved no frontend mostra um bloco único ilegível.
 
+## Karaoke: `lineTimestamps` e `karaokeWords`
+
+As rotas `POST /api/translate` e `POST /api/upload` devolvem também:
+
+- **`audioId`** — id do ficheiro servido em `/api/audio/:id` (quando aplicável).
+- **`lineTimestamps`** — por linha de `letra_original`, `{ start, end }` em segundos ou `null` (linhas vazias / separadores).
+- **`karaokeWords`** — por linha, array de `{ text, start, end }` para highlight palavra a palavra na UI, ou `null`.
+
+Geração:
+
+1. **`lyricsUtils.alignLinesToSegments`** — alinha linhas aos segmentos/palavras do Whisper (Groq).
+2. **`karaokeWordAlign.buildKaraokeWordTimestamps`** — mapeia palavras do Whisper aos tokens da linha exibida (DP monotónico + interpolação).
+3. **WhisperX (opcional)** — `scripts/whisperx_force_align.py` refina limites de linha e, quando o modelo devolve `words` nos segmentos, envia **`lineWords`** no mesmo JSON; o Node faz merge dos **timestamps** mantendo o **texto** da UI quando o número de tokens coincide.
+
+### Variáveis de ambiente (alinhador)
+
+| Variável | Efeito |
+|----------|--------|
+| `FORCED_ALIGNMENT_ENABLED` | Se `false`, não executa Python (só heurística JS). |
+| `ALIGNER_PYTHON` | Caminho explícito ao interpretador Python (venv). |
+| `WHISPERX_DEVICE` / `WHISPERX_COMPUTE_TYPE` | Dispositivo e precisão do WhisperX (ex.: `cpu`, `int8`). |
+
+### Deploy (Render)
+
+O `render.yaml` usa **runtime Node** sem Python nem modelos WhisperX. Em produção no Render, o alinhamento forçado **normalmente fica desligado ou indisponível**; o karaoke fino continua a funcionar com dados do Whisper (Groq) via `karaokeWords`. Para WhisperX em produção, é preciso imagem Docker com Python + dependências, ou um **worker** separado (VPS, Fly.io, etc.).
+
+### Cache de alinhamento (futuro)
+
+Hoje, mesmo com áudio reutilizado por URL (`audioStore.findByUrl`), a transcrição volta a correr. Um cache de resultado por `url + hash(letra_original)` ou por `videoId` poderia poupar Groq e Python; ainda não está implementado.
+
 ## Tratamento de Erros
 
 | Cenário | Comportamento |

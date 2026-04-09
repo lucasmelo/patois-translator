@@ -7,7 +7,9 @@ const transcriptionService = require('../services/transcriptionService');
 const translationService = require('../services/translationService');
 const correctionsService = require('../services/correctionsService');
 const audioStore = require('../services/audioStore');
+const forcedAlignmentService = require('../services/forcedAlignmentService');
 const { collapseRepeats, alignLinesToSegments } = require('../services/lyricsUtils');
+const { buildKaraokeWordTimestamps, mergeWhisperxLineWords } = require('../services/karaokeWordAlign');
 
 const TEMP_DIR = path.join(__dirname, '../../temp');
 const { v4: uuidv4 } = require('uuid');
@@ -48,9 +50,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     // Cria cópia 16kHz mono só para o Whisper (original fica intacto para o player)
     console.log(`[2/3] Criando cópia Whisper 16kHz + transcrevendo...`);
     whisperPath = audioService.createWhisperCopy(playerPath);
-    const { text: originalText, segments } = await transcriptionService.transcribe(whisperPath);
-    await audioService.deleteFile(whisperPath);
-    whisperPath = null;
+    const { text: originalText, segments, words } = await transcriptionService.transcribe(whisperPath);
     console.log(`[2/3] Transcrição OK → ${originalText.length} chars, ${segments.length} segmentos`);
 
     const corrections = correctionsService.findForSong(title);
@@ -62,13 +62,30 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const corrected = correctionsService.applyToResult(translationResult, title);
     const finalResult = collapseRepeats(corrected);
 
-    const lineTimestamps = alignLinesToSegments(finalResult.letra_original, segments);
+    const coarseLineTimestamps = alignLinesToSegments(finalResult.letra_original, segments, words);
+    const forced = whisperPath
+      ? await forcedAlignmentService.alignLineTimestamps(
+        whisperPath,
+        finalResult.letra_original,
+        coarseLineTimestamps,
+        'en',
+      )
+      : null;
+    const lineTimestamps = forced?.lineTimestamps ?? coarseLineTimestamps;
+    let karaokeWords = buildKaraokeWordTimestamps(
+      finalResult.letra_original,
+      words,
+      lineTimestamps,
+    );
+    if (forced?.lineWords?.length) {
+      karaokeWords = mergeWhisperxLineWords(karaokeWords, forced.lineWords);
+    }
     const audioId = path.basename(playerPath, path.extname(playerPath));
     audioStore.register(audioId, playerPath);
     // playerPath agora é gerenciado pelo store — não deletar no finally
 
     console.log(`[OK] audioId registrado: ${audioId} (expira em 10 min)`);
-    return res.json({ ...finalResult, titulo: title, audioId, lineTimestamps });
+    return res.json({ ...finalResult, titulo: title, audioId, lineTimestamps, karaokeWords });
 
   } catch (err) {
     console.error('[ERRO] Upload pipeline falhou:', err.message);

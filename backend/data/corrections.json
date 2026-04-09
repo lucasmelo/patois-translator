@@ -78,5 +78,59 @@
     "linha_pt_original": "Não, não sou fácil",
     "linha_en_corrigida": "Jah know, mi no easy",
     "linha_pt_corrigida": "Jah sabe, não sou fácil"
+  },
+  {
+    "id": "88360abe-86f8-4d8b-aa03-7a0972f3cdfe",
+    "timestamp": "2026-04-02T20:36:04.727Z",
+    "titulo": "junior bapp - lyrics designer",
+    "linha_en_original": "Don't you know, say, tune up and with my mic, chanter",
+    "linha_pt_original": "Sabia não? Afina o som e vem pro meu microfone, cantador",
+    "linha_en_corrigida": "Don't you know, say, Junior Bapp and with my mic, chanter",
+    "linha_pt_corrigida": "Sabia não? É o Junior Bapp com o microfone, cantor"
+  },
+  {
+    "id": "5fc7d074-e019-4415-9b19-4eb6e678decd",
+    "timestamp": "2026-04-02T20:36:43.659Z",
+    "titulo": "junior bapp - lyrics designer",
+    "linha_en_original": "Down to the microphone, jam on them, set up, me a teacher",
+    "linha_pt_original": "No microfone, dou o tom neles, me ponho como mestre",
+    "linha_en_corrigida": "Down to the microphone, jah man, they say me a kingstar",
+    "linha_pt_corrigida": "No microfone, jah man, eles falam que sou o zika"
+  },
+  {
+    "id": "427d9a02-c2a0-48aa-9c26-3844011aa4b7",
+    "timestamp": "2026-04-02T20:38:26.167Z",
+    "titulo": "junior bapp - lyrics designer",
+    "linha_en_original": "Everything a way way cha cha, man a full a culture",
+    "linha_pt_original": "Tudo no ritmo, o cara tá cheio de cultura",
+    "linha_en_corrigida": "Everything a way we chat, jah man, it a full a culture",
+    "linha_pt_corrigida": "Tudo que a gente fala, mano, é pura cultura"
+  },
+  {
+    "id": "87f2c6fe-f602-4167-8d4b-59b34eaffd6f",
+    "timestamp": "2026-04-02T20:39:09.989Z",
+    "titulo": "junior bapp - lyrics designer",
+    "linha_en_original": "Tune a bop, listen mic, chant a bit",
+    "linha_pt_original": "Bate o som, escuta o mic, canta um pouco",
+    "linha_en_corrigida": "Junior Bapp, listen mic, chant a bit",
+    "linha_pt_corrigida": "Junior Bapp, escuta o mic, canta um pouco"
+  },
+  {
+    "id": "bcd6db8a-88bf-4939-9d13-14d3c2d84fbc",
+    "timestamp": "2026-04-02T20:40:36.802Z",
+    "titulo": "junior bapp - lyrics designer",
+    "linha_en_original": "Do this thing since I do a bop, just a young star",
+    "linha_pt_original": "Faço isso desde que comecei, só uma jovem estrela",
+    "linha_en_corrigida": "Do this thing since I Junior Bapp a just a young star",
+    "linha_pt_corrigida": "Faço isso desde que I-man Junior Bapp era só uma jovem estrela"
+  },
+  {
+    "id": "e89a6a06-9cb0-4908-9265-53f83beaeb79",
+    "timestamp": "2026-04-02T20:42:23.024Z",
+    "titulo": "junior bapp - lyrics designer",
+    "linha_en_original": "Run to the microphone jam and listen to a young star",
+    "linha_pt_original": "Corre pro microfone, bora ouvir uma jovem estrela",
+    "linha_en_corrigida": "Run to the microphone, jah man, i am a naughty professor",
+    "linha_pt_corrigida": "Corre pro microfone, meu mano, eu sou um professor mocado"
   }
 ]

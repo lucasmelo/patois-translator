@@ -18,7 +18,19 @@ backend/temp/*.mp3
 backend/temp/*.ogg
 backend/temp/*.webm
 backend/temp/*.m4a
+backend/temp/*.wav
+backend/temp/*.json
 !backend/temp/.gitkeep
+
+# Python local
+.venv/
+backend/.venv/
+**/__pycache__/
+*.pyc
+
+# Backend data must always be tracked
+!backend/data/
+!backend/data/**
 
 # OS
 .DS_Store

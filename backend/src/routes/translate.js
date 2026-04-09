@@ -6,7 +6,9 @@ const transcriptionService = require('../services/transcriptionService');
 const translationService = require('../services/translationService');
 const correctionsService = require('../services/correctionsService');
 const audioStore = require('../services/audioStore');
+const forcedAlignmentService = require('../services/forcedAlignmentService');
 const { collapseRepeats, alignLinesToSegments } = require('../services/lyricsUtils');
+const { buildKaraokeWordTimestamps, mergeWhisperxLineWords } = require('../services/karaokeWordAlign');
 
 const YOUTUBE_REGEX = /^(https?:\/\/)?((www\.|m\.)?youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/)[\w-]{11}/;
 const MAX_DURATION_SECONDS = 420; // 7 minutos
@@ -42,6 +44,7 @@ router.post('/translate', async (req, res) => {
 
     let audioId;
     let segments;
+    let words;
     let originalText;
 
     if (cached) {
@@ -51,9 +54,7 @@ router.post('/translate', async (req, res) => {
       // Ainda precisa transcrever: cria cópia Whisper do arquivo cacheado
       console.log(`[4/5] Criando cópia Whisper do cache + transcrevendo...`);
       whisperPath = audioService.createWhisperCopy(cached.filePath);
-      ({ text: originalText, segments } = await transcriptionService.transcribe(whisperPath));
-      await audioService.deleteFile(whisperPath);
-      whisperPath = null;
+      ({ text: originalText, segments, words } = await transcriptionService.transcribe(whisperPath));
     } else {
       console.log(`[3/5] Baixando áudio M4A + criando cópia Whisper 16kHz...`);
       ({ playerPath, whisperPath } = await audioService.downloadAudio(url));
@@ -61,9 +62,7 @@ router.post('/translate', async (req, res) => {
 
       // 4. Transcrição com a cópia 16kHz (deletada logo após)
       console.log(`[4/5] Transcrevendo via Groq Whisper-large-v3...`);
-      ({ text: originalText, segments } = await transcriptionService.transcribe(whisperPath));
-      await audioService.deleteFile(whisperPath);
-      whisperPath = null;
+      ({ text: originalText, segments, words } = await transcriptionService.transcribe(whisperPath));
 
       // Registra M4A no store com chave de URL (expira em 30 min)
       audioId = path.basename(playerPath, path.extname(playerPath));
@@ -85,10 +84,27 @@ router.post('/translate', async (req, res) => {
 
     const corrected = correctionsService.applyToResult(translationResult, title);
     const finalResult = collapseRepeats(corrected);
-    const lineTimestamps = alignLinesToSegments(finalResult.letra_original, segments);
+    const coarseLineTimestamps = alignLinesToSegments(finalResult.letra_original, segments, words);
+    const forced = whisperPath
+      ? await forcedAlignmentService.alignLineTimestamps(
+        whisperPath,
+        finalResult.letra_original,
+        coarseLineTimestamps,
+        'en',
+      )
+      : null;
+    const lineTimestamps = forced?.lineTimestamps ?? coarseLineTimestamps;
+    let karaokeWords = buildKaraokeWordTimestamps(
+      finalResult.letra_original,
+      words,
+      lineTimestamps,
+    );
+    if (forced?.lineWords?.length) {
+      karaokeWords = mergeWhisperxLineWords(karaokeWords, forced.lineWords);
+    }
 
     console.log(`[OK] audioId: ${audioId} (expira em 30 min)`);
-    return res.json({ ...finalResult, titulo: title, audioId, lineTimestamps });
+    return res.json({ ...finalResult, titulo: title, audioId, lineTimestamps, karaokeWords });
 
   } catch (err) {
     console.error('[ERRO] Pipeline falhou:', err.message);

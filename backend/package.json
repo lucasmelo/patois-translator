@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "setup:align": "node scripts/alignment_cli.js setup",
+    "probe:align": "node scripts/alignment_cli.js probe"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

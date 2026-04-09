@@ -232,6 +232,35 @@
   border-left-color: var(--jamaica-yellow);
 }
 
+/* Karaoke por palavra (linha ativa) */
+.line-en--karaoke,
+.line-pt--karaoke {
+  line-height: 1.55;
+}
+
+.karaoke-word {
+  display: inline;
+  margin-right: 0.3em;
+  border-radius: 3px;
+  padding: 0.05em 0.02em;
+  transition: color 0.08s ease, background-color 0.08s ease;
+}
+
+.karaoke-word--pt {
+  margin-right: 0.28em;
+}
+
+.line-pair--active .karaoke-word--active {
+  color: var(--jamaica-yellow);
+  font-weight: 700;
+  background: rgba(255, 209, 0, 0.12);
+}
+
+.line-pair--active .karaoke-word--pt.karaoke-word--active {
+  color: var(--jamaica-green);
+  background: rgba(0, 122, 61, 0.15);
+}
+
 /* Lyrics Interleaved */
 .lyrics-interleaved {
   max-width: 860px;
