@@ -91,15 +91,37 @@ def force_align(payload: dict[str, Any]) -> int:
                 recovered_segments.append(segment)
         aligned = {"segments": recovered_segments}
 
+    fallback_by_pos: list[dict[str, float | int]] = [
+        {
+            "index": int(segment["index"]),
+            "start": float(segment["original_start"]),
+            "end": float(segment["original_end"]),
+        }
+        for segment in segments
+    ]
+
     out_lines = []
     out_line_words: list[dict[str, Any]] = []
-    for segment in aligned.get("segments", []):
+    for pos, segment in enumerate(aligned.get("segments", [])):
+        fallback = fallback_by_pos[pos] if pos < len(fallback_by_pos) else None
+
         start = segment.get("start", segment.get("original_start"))
         end = segment.get("end", segment.get("original_end"))
         if start is None or end is None or end <= start:
             start = segment.get("original_start")
             end = segment.get("original_end")
-        idx = int(segment["index"])
+
+        if (start is None or end is None or end <= start) and fallback is not None:
+            start = fallback["start"]
+            end = fallback["end"]
+
+        raw_idx = segment.get("index")
+        if raw_idx is None and fallback is not None:
+            raw_idx = fallback["index"]
+        if raw_idx is None or start is None or end is None or end <= start:
+            continue
+        idx = int(raw_idx)
+
         out_lines.append({
             "index": idx,
             "start": float(start),
