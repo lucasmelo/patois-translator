@@ -120,6 +120,25 @@ O LLM DEVE reconstruir quebras de linha poéticas a partir do bloco contínuo do
 
 Se a IA não gerar \n, o display interleaved no frontend mostra um bloco único ilegível.
 
+## Karaoke: `lineTimestamps`
+
+As rotas `POST /api/translate` e `POST /api/upload` devolvem também:
+
+- **`audioId`** — id do ficheiro servido em `/api/audio/:id` (quando aplicável).
+- **`lineTimestamps`** — por linha de `letra_original`, `{ start, end }` em segundos ou `null` (linhas vazias / separadores).
+
+Geração:
+
+1. **`lyricsUtils.alignLinesToSegments`** — alinha linhas aos segmentos/palavras do Whisper (Groq).
+
+### Deploy (Render)
+
+O `render.yaml` usa **runtime Node** sem Python. O karaoke atual é de **destaque por linha**, usando somente os timestamps gerados no backend Node.
+
+### Cache de alinhamento (futuro)
+
+Hoje, mesmo com áudio reutilizado por URL (`audioStore.findByUrl`), a transcrição volta a correr. Um cache de resultado por `url + hash(letra_original)` ou por `videoId` poderia poupar Groq; ainda não está implementado.
+
 ## Tratamento de Erros
 
 | Cenário | Comportamento |

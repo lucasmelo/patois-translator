@@ -22,8 +22,13 @@ ETAPA 2 — DICIONÁRIO PATOIS → PT-BR (USE SEMPRE)
 - Crucial → "sério demais", "pesado", "irado"
 - Dread (adj.) → "poderoso", "sagrado", "pesado" — SÓ "terrível" se contexto de Babylon
 - Renk → "sem noção", "metido", "mal-educado" (não apenas "fedorento")
-- Ignorant → "nervoso", "fácil de irritar" (não "ignorante intelectual")
+- Ignorant → "estourado", "sem paciência", "fácil de irritar" (não "ignorante intelectual")
 - Cris/Crissars → "novinho", "impecável", "da hora"
+- Tallowah → "firme", "destemido", "forte" (NUNCA relacionar com "sebo/gordura")
+- Rhygin → "elétrico", "animado", "provocante" (elogio — espírito vigoroso)
+- Alias → "perigoso", "brabo" (NUNCA traduzir como "apelido")
+- Craven → "ganancioso", "lambão" (NUNCA "covarde" — false cognate total)
+- Soft → "fraco", "liso" (dependendo do contexto: amateurish OU sem dinheiro)
 
 ESPIRITUALIDADE E POLÍTICA RASTAFARI:
 - Babylon → "o sistema", "a máquina", "o Império", "a repressão"
@@ -46,7 +51,7 @@ COTIDIANO E GÍRIAS:
 - Wah gwan / Wagwan → "e aí?", "qual é?", "o que rola?"
 - Mi deh yah → "tô aqui", "tô firme", "tô na paz"
 - Irie → "maneiro", "na vibe", "na paz", "top"
-- Seen / Seen? → "entendeu?", "sacou?", "na moral" (confirmação/concordância)
+- Seen / Seen? / Sight? → "entendeu?", "sacou?", "na moral" (confirmação/concordância)
 - Riddim → manter "riddim" ou "a batida", "o beat"
 - Bredren / Bredda → "mano", "chegado", "parceiro"
 - Sistren → "mana", "chegada", "parceira"
@@ -66,19 +71,32 @@ COTIDIANO E GÍRIAS:
 - Ginnal → "maladrão", "o espertão", "o esperto"
 - Everyting cook & curry → "tá tudo certo", "tá de boa"
 - Cool runnings → "vai com Deus", "boa viagem", "sucesso aí"
+- Pree → "ficar de olho", "observar", "dar uma checada" (ex: "pree dis" = olha isso)
+- Labrish / Passa-passa → "fofoca", "bagunça escandalosa"
+- Bly → "uma chance", "uma brecha", "oportunidade"
+- Braata → "de brinde", "de quebra", "um extra" (equivale a "dar um bônus")
+- Hail → "salve", "oi" (saudação simples)
+- Boonoonoonous → "maravilhoso", "incrível", "gato/gatona" (termo de afeto/admiração)
+- Salt → "liso", "azarado", "sem sorte" (ex: "im salt" = ele tá na pior)
+- Vex / Brindle → "nervoso", "irritado", "com raiva"
+- Cotch → "parar por um tempo", "dar um colo", "ficar por aí um pouco"
 
 STATUS E HIERARQUIA SOCIAL (muito frequente em dancehall/roots):
 - Lion → "o leão", "o guerreiro justo" (Rasta de alto nível espiritual)
-- Don / Don Dada → "o dono", "o chefão", "o mandachuva"
+- Don / Don Dada / Dan Dada → "o dono", "o chefão", "o mandachuva" (Dan Dada = o maior de todos)
+- Notch → "o mais foda", "o número um", "top ranking" (patamar máximo)
 - General → "o general", "o mano respeitado", "o operador"
 - Ranking → "ranqueado", "de respeito", "de alto escalão"
 - Massive → "a galera", "o pessoal", "os caras"
 - Sufferer → "o sofredor", "quem tá na luta", "o guerreiro da periferia"
 - Raggamuffin → "moleque da quebrada", "jovem do gueto" (com orgulho, não depreciativo)
-- Rude boy → "malando", "mano do gueto", "o durão"
+- Rude boy / Bad bwai → "malando", "mano do gueto", "o durão"
 - Bald-head → "o mundano", "o careta" (quem não é Rasta)
 - Creation stepper → "guerreiro que atravessa o sistema" (sem medo de Babylon)
 - Roots (saudação) → "mano", "raiz", "chegado"
+- Boops → "sugar daddy", "o coroa sustentando" (homem mais velho que banca novinha)
+- Matey → "a outra", "a amante" (não a esposa oficial)
+- Stoosh / Stoshus → "mauricinho", "patricinha", "metido a besta" (classe alta afetada)
 
 CULTURA CANNABIS (onipresente no reggae — cada termo tem nuance própria):
 - Herb / Ganja / Kaya → "a erva", "a brisa", "o bagulho"
@@ -104,9 +122,42 @@ GRAMÁTICA CRÍTICA DO PATOIS (para não errar a tradução):
 - "A go" = vai acontecer: "it a go happen" = "vai acontecer"
 - "Fi" = infinitivo "para" OU possessivo "de/meu": "fi mi" = "meu"; "fi go" = "para ir"
 - "Cyaan / Cyaah" = não pode, impossível: "mi cyaan badda" = "não consigo me importar"
-- "Nah / Nuh" = não / não vai: "mi nah leave" = "eu não vou embora"
-- "Dem" = eles/elas OU plural marcador: "di man dem" = "os caras"
+- "Nah / Nuh" = "nah" é negação enfática de futuro; "nuh" é interrogativo suave: "nuh true?" = "né?"
+- "Haffi" = "tem que", "precisa": "yu haffi go" = "você tem que ir"
+- "Inna / Pon" = "dentro de / em": "inna di morrows" = "amanhã"; "pon di road" = "na rua"
+- "Deh pon" = estar no processo de: "mi deh pon it" = "tô nisso", "tô trabalhando nesse papo"
+- "Thru'" = "porque", "por causa de": "mi rich thru' hard work" = "sou rico porque trabalhei duro"
+- "Dem" = eles/elas OU plural marcador: "di man dem" = "os caras" (plural sem -s nas palavras)
 - "Him" = pode ser ele OU ela (Patois não tem gênero obrigatório)
+- "Unu" = vocês (plural de segunda pessoa): "unu come yah" = "vocês venham aqui"
+- "The I" = você (forma respeitosa Rasta de segunda pessoa): "The I know" = "você sabe"
+- Adjetivos reduplizados = matiz "meio/algo": "fool-fool" = "fazendo o bobo"; "likkle-likkle" = "pequenininho"
+
+═══════════════════════════════════════════════════════════
+ETAPA 2.5 — REVERTER ANGLICIZAÇÃO DO WHISPER (CRÍTICO)
+═══════════════════════════════════════════════════════════
+A transcrição de áudio é feita pelo Whisper, que NÃO conhece Patois. Ele normaliza palavras jamaicanas para inglês padrão. Antes de traduzir, mentalmente reverta essas conversões:
+
+Whisper escreve → Real Patois / intenção original:
+- "me" ou "my" → "mi" (pronome sujeito/objeto/possessivo)
+- "the" → "di" (artigo definido)
+- "no", "not" → "nah" ou "nuh" (negação Patois)
+- "boy" → "bwoy/bwai" (jovem do gueto, rude boy)
+- "girl" / "gal" → "gyal" (garota, dancehall)
+- "little" → "likkle" (pequeno, diminutivo afetivo)
+- "dirty" → "dutty" (safado, imundo)
+- "rhythm" → "riddim" (beat jamaicano)
+- "what's going on" → "wah gwan" (cumprimento)
+- "can't" / "cannot" → "cyaan" (impossibilidade)
+- "have to" / "gotta" → "haffi" (obrigação)
+- "in a" / "in the" → "inna" (dentro de, em)
+- "for" / "to" → "fi" (infinitivo ou possessivo)
+- "brother" / "brethren" → "bredren" (parceiro, irmão)
+- "picking" / "picnic" (!) → "pickney" (criança)
+- "them" → "dem" (plural ou eles/elas)
+- "man them" / "men" → "man dem" (os caras, a galera)
+
+Mesmo que o texto transcrito pareça inglês correto, sempre interprete no contexto jamaicano e aplique o dicionário desta etapa 2.
 
 ═══════════════════════════════════════════════════════════
 ETAPA 3 — REGRAS DE TRADUÇÃO COM MALANDRAGEM

@@ -1,3 +1,63 @@
+/* ─── Loading Overlay ──────────────────────────────────────────── */
+output.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(8, 8, 8, 0.96);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  user-select: none;
+}
+
+/* ── GIF do baseado ── */
+.joint-gif {
+  width: 220px;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Frases ── */
+.loading-phrase {
+  margin-top: 2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--jamaica-yellow);
+  font-style: italic;
+  text-align: center;
+  min-height: 1.8em;
+  max-width: 360px;
+  line-height: 1.5;
+  /* pulso sincronizado com o intervalo de 3.5s — opacidade cai no meio da troca */
+  animation: phrase-pulse 3.5s ease-in-out infinite;
+}
+
+@keyframes phrase-pulse {
+  0%   { opacity: 1;    transform: translateY(0); }
+  42%  { opacity: 0.85; transform: translateY(0); }
+  50%  { opacity: 0.3;  transform: translateY(4px); }
+  58%  { opacity: 0.85; transform: translateY(0); }
+  100% { opacity: 1;    transform: translateY(0); }
+}
+
+.loading-sub {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #a0a0a0;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────────── */
+
 .hero {
   text-align: center;
   padding: 3rem 1rem 2rem;
@@ -35,6 +95,42 @@
   max-width: 480px;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+/* Mode Tabs */
+.mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mode-tab {
+  flex: 1;
+  background: var(--surface);
+  border: 2px solid var(--surface-3);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.mode-tab:hover:not(:disabled) {
+  border-color: var(--jamaica-yellow);
+  color: var(--text-primary);
+}
+
+.mode-tab--active {
+  border-color: var(--jamaica-yellow);
+  color: var(--jamaica-yellow);
+}
+
+.mode-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Search Box */
@@ -104,6 +200,42 @@
   cursor: not-allowed;
 }
 
+/* File upload */
+.search-box__inner--file {
+  align-items: center;
+}
+
+.file-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+}
+
+.file-label--selected {
+  color: var(--text-primary);
+}
+
+.file-label__icon {
+  flex-shrink: 0;
+}
+
+.file-label__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-input {
+  display: none;
+}
+
 /* Spinner */
 .spinner {
   display: inline-block;
@@ -157,7 +289,7 @@
   border: 1px solid rgba(255, 77, 77, 0.35);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #ff7070;
+  color: #ff9999;
   line-height: 1.5;
 }
 

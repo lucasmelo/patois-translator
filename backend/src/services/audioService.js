@@ -1,7 +1,8 @@
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const { v4: uuidv4 } = require('uuid');
 const { create } = require('yt-dlp-exec');
+const { spawnSync } = require('node:child_process');
 
 // Em produção (Render): o build baixa o binário para backend/bin/yt-dlp via curl.
 // Em dev (Windows/Mac): usa 'yt-dlp' do PATH do sistema.
@@ -13,7 +14,6 @@ console.log(`[yt-dlp] usando binário: ${YT_DLP_BIN}`);
 const TEMP_DIR = path.join(__dirname, '../../temp');
 
 // Cookies do YouTube — necessário em IPs de datacenter (Render, AWS, etc.)
-// No Render: Environment → YOUTUBE_COOKIES = conteúdo do arquivo cookies.txt (formato Netscape)
 let COOKIES_FILE = null;
 if (process.env.YOUTUBE_COOKIES) {
   if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
@@ -24,8 +24,6 @@ if (process.env.YOUTUBE_COOKIES) {
   console.warn('[yt-dlp] YOUTUBE_COOKIES não definida — pode falhar em IPs de datacenter');
 }
 
-// Normaliza qualquer variante de URL do YouTube para watch?v=ID limpo,
-// eliminando &list=, &index=, &start_radio= e outros parâmetros extras.
 function normalizeYoutubeUrl(raw) {
   try {
     const url = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
@@ -75,23 +73,48 @@ async function getMetadata(url) {
   }
 }
 
+// Cria uma cópia 16kHz mono WAV do áudio para envio ao Whisper.
+// O Whisper resamples tudo para 16kHz internamente — mandar em alta qualidade não melhora a transcrição.
+// Separar os dois arquivos permite servir qualidade máxima ao player sem sacrificar espaço no Whisper.
+function createWhisperCopy(inputPath) {
+  const outputPath = path.join(path.dirname(inputPath), `${uuidv4()}_whisper.wav`);
+  const result = spawnSync('ffmpeg', [
+    '-i', inputPath,
+    '-ar', '16000',
+    '-ac', '1',
+    '-y', outputPath,
+  ], { timeout: 60_000 });
+
+  if (result.status !== 0) {
+    throw new Error('Falha ao preparar áudio para transcrição (ffmpeg). Verifique se o ffmpeg está instalado.');
+  }
+  return outputPath;
+}
+
+// Baixa M4A nativo do YouTube (sem reencoding quando possível) para o player/transcrição.
+// Retorna { playerPath }:
+//   playerPath — M4A de qualidade máxima, servido ao player do browser.
+// Fallback para WAV 16kHz é aplicado na rota apenas quando a transcrição falha/parece fraca.
 async function downloadAudio(url) {
   url = normalizeYoutubeUrl(url);
-  const filePath = path.join(TEMP_DIR, `${uuidv4()}.mp3`);
+
+  // M4A nativo do YouTube: sem dupla compressão, qualidade de reprodução máxima.
+  // yt-dlp faz remux direto quando o stream já é AAC/M4A (sem perda).
+  const playerPath = path.join(TEMP_DIR, `${uuidv4()}.m4a`);
 
   try {
     await ytDlp(url, ytDlpOptions({
       extractAudio: true,
-      audioFormat: 'mp3',
-      audioQuality: '64K',
-      output: filePath,
+      audioFormat: 'm4a',
+      audioQuality: '0',   // melhor qualidade se precisar reencodar (ex: stream Opus → AAC)
+      output: playerPath,
     }));
   } catch (err) {
     console.error('[yt-dlp] Falha no download do áudio:', err.message);
     throw new Error('Falha ao baixar o áudio. Verifique se yt-dlp e ffmpeg estão instalados no PATH.');
   }
 
-  return filePath;
+  return { playerPath };
 }
 
 async function deleteFile(filePath) {
@@ -102,4 +125,4 @@ async function deleteFile(filePath) {
   }
 }
 
-module.exports = { getMetadata, downloadAudio, deleteFile };
+module.exports = { getMetadata, downloadAudio, createWhisperCopy, deleteFile, normalizeYoutubeUrl };

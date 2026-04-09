@@ -7,6 +7,114 @@
   <p class="context-card__body">{{ result().analise_de_contexto }}</p>
 </div>
 
+<!-- Player principal (inline, estilo original) -->
+@if (hasAudio()) {
+  <!-- Elemento de áudio: único, compartilhado pelo player inline e mini-player -->
+  <audio
+    #audioEl
+    [src]="audioUrl()!"
+    (timeupdate)="onTimeUpdate($event)"
+    (durationchange)="onDurationChange($event)"
+    (ended)="onEnded()"
+    (play)="onPlay()"
+    (pause)="onPause()"
+    preload="metadata"
+  ></audio>
+
+  <!-- Player inline -->
+  <div class="karaoke-player" #playerEl>
+    <div class="karaoke-player__inner">
+      <button
+        class="karaoke-player__btn"
+        (click)="togglePlay()"
+        [attr.aria-label]="isPlaying() ? 'Pausar' : 'Tocar'"
+      >
+        @if (isPlaying()) {
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <rect x="4" y="3" width="4" height="14" rx="1"/>
+            <rect x="12" y="3" width="4" height="14" rx="1"/>
+          </svg>
+        } @else {
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M5 3.5l12 6.5-12 6.5V3.5z"/>
+          </svg>
+        }
+      </button>
+
+      <input
+        class="karaoke-player__scrubber"
+        type="range"
+        min="0"
+        [max]="audioDuration()"
+        step="0.1"
+        [value]="currentTime()"
+        [style.--fill]="progressPercent() + '%'"
+        (input)="seekToValue($event)"
+        aria-label="Progresso da música"
+      />
+
+      <span class="karaoke-player__time">{{ formattedTime() }}</span>
+    </div>
+    @if (!isPlaying() && currentTime() === 0) {
+      <p class="karaoke-player__hint">▶ Toque para ativar o karaoke</p>
+    }
+  </div>
+
+  <!-- Mini-player fixo — aparece quando o player principal sai da tela -->
+  <div class="mini-player" [class.mini-player--visible]="miniPlayerVisible()">
+    <div class="mini-player__inner">
+      <button
+        class="mini-player__skip"
+        (click)="seekBySeconds(-10)"
+        aria-label="Voltar 10 segundos"
+        title="Voltar 10s"
+      >
+        -10s
+      </button>
+
+      <button
+        class="mini-player__btn"
+        (click)="togglePlay()"
+        [attr.aria-label]="isPlaying() ? 'Pausar' : 'Tocar'"
+      >
+        @if (isPlaying()) {
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <rect x="4" y="3" width="4" height="14" rx="1"/>
+            <rect x="12" y="3" width="4" height="14" rx="1"/>
+          </svg>
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M5 3.5l12 6.5-12 6.5V3.5z"/>
+          </svg>
+        }
+      </button>
+
+      <input
+        class="mini-player__scrubber"
+        type="range"
+        min="0"
+        [max]="audioDuration()"
+        step="0.1"
+        [value]="currentTime()"
+        [style.--fill]="progressPercent() + '%'"
+        (input)="seekToValue($event)"
+        aria-label="Progresso da música no player flutuante"
+      />
+
+      <button
+        class="mini-player__skip"
+        (click)="seekBySeconds(10)"
+        aria-label="Adiantar 10 segundos"
+        title="Adiantar 10s"
+      >
+        +10s
+      </button>
+
+      <span class="mini-player__time">{{ formattedTime() }}</span>
+    </div>
+  </div>
+}
+
 <!-- Letras intercaladas linha a linha -->
 <div class="lyrics-interleaved">
   <div class="lyrics-interleaved__header">
@@ -15,19 +123,98 @@
     <span class="lyrics-interleaved__sep">/</span>
     <span>🇧🇷</span>
     <span class="lyrics-interleaved__label">Português do Brasil</span>
+    <span class="lyrics-interleaved__hint">— clique no lápis para corrigir uma linha</span>
   </div>
   <div class="lyrics-interleaved__body">
-    @for (pair of pairedLines(); track $index) {
+    @for (pair of pairedLines(); track lineIdx; let lineIdx = $index) {
       @if (pair.en || pair.pt) {
-        <div class="line-pair">
-          <p class="line-en">{{ pair.en }}</p>
-          <p class="line-pt">{{ pair.pt }}</p>
-        </div>
+
+        @if (editingIndex() === lineIdx) {
+          <div class="line-edit" [id]="'lyric-line-' + lineIdx">
+            <div class="line-edit__fields">
+              <input
+                class="line-edit__input line-edit__input--en"
+                [(ngModel)]="editEn"
+                placeholder="Linha original (Patois/EN)"
+                (keyup.enter)="confirmEdit(lineIdx)"
+                (keyup.escape)="cancelEdit()"
+                autofocus
+              />
+              <input
+                class="line-edit__input line-edit__input--pt"
+                [(ngModel)]="editPt"
+                placeholder="Linha traduzida (PT-BR)"
+                (keyup.enter)="confirmEdit(lineIdx)"
+                (keyup.escape)="cancelEdit()"
+              />
+            </div>
+            <div class="line-edit__actions">
+              <button class="line-edit__btn line-edit__btn--confirm" (click)="confirmEdit(lineIdx)" title="Confirmar">✓</button>
+              <button class="line-edit__btn line-edit__btn--cancel" (click)="cancelEdit()" title="Cancelar">✕</button>
+            </div>
+          </div>
+
+        } @else {
+          <div
+            class="line-pair"
+            [id]="'lyric-line-' + lineIdx"
+            [class.line-pair--edited]="isEdited(lineIdx)"
+            [class.line-pair--active]="isLineInKaraokeWindow(lineIdx)"
+            [class.line-pair--focus]="isLineInCurrentGroup(lineIdx)"
+          >
+            <div
+              class="line-pair__content"
+              [class.line-pair__content--seekable]="hasAudio() && hasLineTimestamp(lineIdx)"
+              (click)="seekToLine(lineIdx)"
+              [attr.role]="hasAudio() && hasLineTimestamp(lineIdx) ? 'button' : null"
+              [attr.tabindex]="hasAudio() && hasLineTimestamp(lineIdx) ? 0 : null"
+              (keyup.enter)="seekToLine(lineIdx)"
+            >
+              <p class="line-en">{{ pair.en }}</p>
+              <p class="line-pt">{{ pair.pt }}</p>
+            </div>
+            <div class="line-pair__controls">
+              <button class="line-btn line-btn--edit" (click)="startEdit(lineIdx)" title="Editar esta linha">✏️</button>
+              @if (isEdited(lineIdx)) {
+                @if (isSaved(lineIdx)) {
+                  <span class="line-saved" title="Correção salva">✓</span>
+                } @else if (correctionError() === lineIdx) {
+                  <span class="line-error" title="Erro ao salvar — tente novamente">✕</span>
+                  <button class="line-btn line-btn--save" (click)="saveCorrection(lineIdx)" title="Tentar novamente">💾</button>
+                } @else {
+                  <button class="line-btn line-btn--save" (click)="saveCorrection(lineIdx)" title="Salvar correção">💾</button>
+                }
+              }
+            </div>
+          </div>
+        }
+
       } @else {
         <div class="line-break"></div>
       }
     }
   </div>
+</div>
+
+<!-- Salvar tradução -->
+<div class="save-song">
+  @if (songSaveState() === 'saved') {
+    <div class="save-song__confirm">
+      <span>✅</span>
+      <span>Tradução salva! Será usada para enriquecer futuras traduções.</span>
+    </div>
+  } @else {
+    <button class="save-song__btn" (click)="saveSong()" [disabled]="songSaveState() === 'saving'">
+      @if (songSaveState() === 'saving') {
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Salvando...</span>
+      } @else {
+        <span>💾</span>
+        <span>Salvar esta tradução</span>
+      }
+    </button>
+    <p class="save-song__hint">Salva a letra e a tradução para enriquecer o vocabulário de futuras músicas.</p>
+  }
 </div>
 
 <!-- Notas Culturais -->
@@ -37,7 +224,6 @@
       <span>📚</span> Notas Culturais
     </h2>
     <p class="notas-section__subtitle">Clique em um termo para expandir a explicação</p>
-
     <div class="notas-grid">
       @for (nota of result().notas_culturais; track trackByTermo($index, nota)) {
         <div
@@ -52,9 +238,7 @@
         >
           <div class="nota-card__header">
             <span class="nota-card__termo">{{ nota.termo }}</span>
-            <span class="nota-card__chevron" [class.nota-card__chevron--open]="isExpanded(nota.termo)">
-              ›
-            </span>
+            <span class="nota-card__chevron" [class.nota-card__chevron--open]="isExpanded(nota.termo)">›</span>
           </div>
           @if (isExpanded(nota.termo)) {
             <p class="nota-card__explicacao">{{ nota.explicacao }}</p>
